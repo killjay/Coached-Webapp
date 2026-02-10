@@ -137,7 +137,7 @@ export const UI_MESSAGES = {
   
   // Coach Onboarding
   COACH_ONBOARDING: {
-    SUCCESS: 'Coach successfully onboarded! Pending verification.',
+    SUCCESS: 'Coach successfully onboarded! Available for assignment.',
     ERROR: 'Failed to create coach. Please try again.',
   },
   

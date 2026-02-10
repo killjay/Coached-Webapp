@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
 import { validateEmail, validatePhone } from '../../utils/validation';
 import { useFirestore } from '../../hooks/useFirestore';
 import { CoachFormData } from '../../types';
@@ -130,7 +129,8 @@ const CoachOnboard: React.FC = () => {
     try {
       await create({
         ...formData,
-        status: COACH_STATUS.PENDING,
+        // Mark as verified so they are immediately assignable in client onboarding
+        status: COACH_STATUS.VERIFIED,
         createdAt: new Date().toISOString(),
       } as any);
       

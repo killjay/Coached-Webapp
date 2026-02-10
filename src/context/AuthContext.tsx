@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // #endregion
       
       setUser(user);
+      let plan: string | null = null;
       
       if (user) {
         // #region agent log
@@ -56,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // #endregion
         
         // Load user's plan when they login
-        const plan = await checkUserPlan();
+        plan = await checkUserPlan();
         
         // #region agent log
         fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:48',message:'checkUserPlan completed',data:{plan:plan},timestamp:Date.now(),hypothesisId:'H1,H2'})}).catch(()=>{});
@@ -68,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:53',message:'Setting loading to false',data:{hasUser:!!user,plan:user?selectedPlan:null},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:53',message:'Setting loading to false',data:{hasUser:!!user,plan:plan},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
       // #endregion
       
       setLoading(false);

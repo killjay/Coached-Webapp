@@ -14,6 +14,7 @@ const PendingClients: React.FC = () => {
   const [coaches, setCoaches] = useState<CoachProfile[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [coachesLoading, setCoachesLoading] = useState(true);
+  const [coachesError, setCoachesError] = useState<string | null>(null);
   const { update } = useFirestore('client_profiles');
 
   const [selectedClient, setSelectedClient] = useState<ClientProfile | null>(null);
@@ -39,21 +40,32 @@ const PendingClients: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Real-time listener for active coaches
+  // Real-time listener for available coaches (pending/verified/active)
   useEffect(() => {
     const q = query(
       collection(db, 'coach_profiles'),
-      where('status', '==', COACH_STATUS.ACTIVE)
+      where('status', 'in', [COACH_STATUS.PENDING, COACH_STATUS.VERIFIED, COACH_STATUS.ACTIVE])
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const coachList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as CoachProfile[];
-      setCoaches(coachList);
-      setCoachesLoading(false);
-    });
+    setCoachesError(null);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const coachList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as CoachProfile[];
+        setCoaches(coachList);
+        setCoachesLoading(false);
+      },
+      (error) => {
+        console.error('Error loading coaches:', error);
+        setCoaches([]);
+        setCoachesError('Failed to load coaches. Please refresh and try again.');
+        setCoachesLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
@@ -131,6 +143,12 @@ const PendingClients: React.FC = () => {
           Clients who have completed their onboarding form and are waiting for coach assignment
         </p>
       </div>
+
+      {coachesError && (
+        <Card>
+          <div style={{ color: '#ef4444' }}>{coachesError}</div>
+        </Card>
+      )}
 
       {!pendingClients || pendingClients.length === 0 ? (
         <Card>

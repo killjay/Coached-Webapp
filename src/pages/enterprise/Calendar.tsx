@@ -19,7 +19,7 @@ interface Appointment {
 const Calendar: React.FC = () => {
   const [view, setView] = useState<'month' | 'week' | 'day'>('week');
   const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   const mockAppointments: Appointment[] = [
     {

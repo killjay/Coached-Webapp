@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Select from '../../components/common/Select';
@@ -16,7 +16,6 @@ import './RevenueDashboard.css';
 
 const RevenueDashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState('30');
-  const [loading, setLoading] = useState(false);
 
   // Mock data - in production, this would come from Firestore
   const metrics = MOCK_REVENUE_METRICS;

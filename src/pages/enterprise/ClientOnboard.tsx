@@ -21,6 +21,7 @@ const ClientOnboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [coaches, setCoaches] = useState<CoachProfile[]>([]);
   const [coachesLoading, setCoachesLoading] = useState(true);
+  const [coachesError, setCoachesError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     // Personal Information
@@ -56,21 +57,32 @@ const ClientOnboard: React.FC = () => {
     { number: 4, title: 'Plan & Coach', description: 'Assignment' },
   ];
 
-  // Fetch active coaches
+  // Fetch available coaches (pending/verified/active)
   useEffect(() => {
     const q = query(
       collection(db, 'coach_profiles'),
-      where('status', '==', COACH_STATUS.ACTIVE)
+      where('status', 'in', [COACH_STATUS.PENDING, COACH_STATUS.VERIFIED, COACH_STATUS.ACTIVE])
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const coachList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as CoachProfile[];
-      setCoaches(coachList);
-      setCoachesLoading(false);
-    });
+    setCoachesError(null);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const coachList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as CoachProfile[];
+        setCoaches(coachList);
+        setCoachesLoading(false);
+      },
+      (error) => {
+        console.error('Error loading coaches:', error);
+        setCoaches([]);
+        setCoachesError('Failed to load coaches. Please refresh and try again.');
+        setCoachesLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
@@ -384,7 +396,12 @@ const ClientOnboard: React.FC = () => {
                 {UI_MESSAGES.CLIENT_ONBOARDING.COACHES_LOADING}
               </p>
             )}
-            {coaches.length === 0 && !coachesLoading && (
+            {coachesError && !coachesLoading && (
+              <p style={{ color: '#ef4444', marginTop: '10px' }}>
+                {coachesError}
+              </p>
+            )}
+            {coaches.length === 0 && !coachesLoading && !coachesError && (
               <p style={{ color: '#f59e0b', marginTop: '10px' }}>
                 {UI_MESSAGES.CLIENT_ONBOARDING.NO_COACHES_WARNING}
               </p>

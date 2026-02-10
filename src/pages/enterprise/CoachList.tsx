@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -9,7 +11,7 @@ import Modal from '../../components/common/Modal';
 import { useTable } from '../../hooks/useTable';
 import { formatCurrency } from '../../utils/formatters';
 import { formatDate } from '../../utils/dateUtils';
-import { MOCK_COACHES } from '../../constants';
+import { CoachProfile } from '../../types';
 import '../enterprise/ClientList.css';
 
 interface Coach {
@@ -17,7 +19,7 @@ interface Coach {
   fullName: string;
   email: string;
   specializations: string[];
-  status: 'verified' | 'pending' | 'inactive';
+  status: 'pending' | 'verified' | 'rejected' | 'active' | 'inactive';
   clientCount: number;
   revenue: number;
   joinDate: string;
@@ -28,64 +30,123 @@ const CoachList: React.FC = () => {
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  // Mock data - replace with Firestore data in production
-  const mockCoaches: Coach[] = MOCK_COACHES as any;
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [coachesLoading, setCoachesLoading] = useState(true);
+  const [coachesError, setCoachesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'coach_profiles'));
+
+    setCoachesError(null);
+    setCoachesLoading(true);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const rows: Coach[] = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data() as Partial<CoachProfile> & {
+            createdAt?: any;
+            metrics?: any;
+          };
+
+          const createdAt = data.createdAt;
+          const joinDate =
+            createdAt && typeof createdAt.toDate === 'function'
+              ? createdAt.toDate().toISOString()
+              : createdAt instanceof Date
+                ? createdAt.toISOString()
+                : typeof createdAt === 'string'
+                  ? createdAt
+                  : '';
+
+          const metrics = data.metrics ?? {};
+          const clientCount = typeof metrics.clientCount === 'number' ? metrics.clientCount : 0;
+          const revenue = typeof metrics.totalRevenue === 'number' ? metrics.totalRevenue : 0;
+
+          return {
+            id: docSnap.id,
+            fullName: data.fullName || '(No name)',
+            email: data.email || '',
+            specializations: Array.isArray(data.specializations) ? data.specializations : [],
+            status: (data.status as Coach['status']) || 'pending',
+            clientCount,
+            revenue,
+            joinDate,
+          };
+        });
+
+        setCoaches(rows);
+        setCoachesLoading(false);
+      },
+      (error) => {
+        console.error('Error loading coaches:', error);
+        setCoaches([]);
+        setCoachesError('Failed to load coaches. Please refresh and try again.');
+        setCoachesLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   const table = useTable({
-    data: mockCoaches,
+    data: coaches,
     initialPageSize: 10,
     initialSortKey: 'fullName',
   });
 
-  const columns: Column<Coach>[] = [
-    {
-      key: 'fullName',
-      header: 'Name',
-      sortable: true,
-    },
-    {
-      key: 'specializations',
-      header: 'Specializations',
-      render: (coach) => coach.specializations.join(', '),
-    },
-    {
-      key: 'clientCount',
-      header: 'Clients',
-      sortable: true,
-    },
-    {
-      key: 'revenue',
-      header: 'Revenue',
-      render: (coach) => formatCurrency(coach.revenue),
-      sortable: true,
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (coach) => (
-        <span className={`status-badge status-${coach.status}`}>
-          {coach.status.charAt(0).toUpperCase() + coach.status.slice(1)}
-        </span>
-      ),
-      sortable: true,
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (coach) => (
-        <Button
-          size="small"
-          variant="ghost"
-          onClick={() => {
-            setSelectedCoach(coach);
-            setShowModal(true);
-          }}
-        >
-          View
-        </Button>
-      ),
-    },
-  ];
+  const columns: Column<Coach>[] = useMemo(
+    () => [
+      {
+        key: 'fullName',
+        header: 'Name',
+        sortable: true,
+      },
+      {
+        key: 'specializations',
+        header: 'Specializations',
+        render: (coach) => coach.specializations.join(', '),
+      },
+      {
+        key: 'clientCount',
+        header: 'Clients',
+        sortable: true,
+      },
+      {
+        key: 'revenue',
+        header: 'Revenue',
+        render: (coach) => formatCurrency(coach.revenue),
+        sortable: true,
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        render: (coach) => (
+          <span className={`status-badge status-${coach.status}`}>
+            {coach.status.charAt(0).toUpperCase() + coach.status.slice(1)}
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        key: 'actions',
+        header: 'Actions',
+        render: (coach) => (
+          <Button
+            size="small"
+            variant="ghost"
+            onClick={() => {
+              setSelectedCoach(coach);
+              setShowModal(true);
+            }}
+          >
+            View
+          </Button>
+        ),
+      },
+    ],
+    []
+  );
 
   return (
     <div className="client-list-page">
@@ -118,14 +179,22 @@ const CoachList: React.FC = () => {
           <Select
             options={[
               { value: '', label: 'All Status' },
+              { value: 'active', label: 'Active' },
               { value: 'verified', label: 'Verified' },
               { value: 'pending', label: 'Pending' },
               { value: 'inactive', label: 'Inactive' },
+              { value: 'rejected', label: 'Rejected' },
             ]}
             value={table.filters.status as string || ''}
             onChange={(e) => table.handleFilter('status', e.target.value || undefined)}
           />
         </div>
+
+        {coachesLoading && <div className="loading-state">Loading...</div>}
+        {coachesError && <div style={{ color: '#ef4444' }}>{coachesError}</div>}
+        {!coachesLoading && !coachesError && coaches.length === 0 && (
+          <div className="empty-state">No coaches found.</div>
+        )}
 
         <Table
           columns={columns}
@@ -161,7 +230,9 @@ const CoachList: React.FC = () => {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Join Date</span>
-                  <span className="detail-value">{formatDate(selectedCoach.joinDate)}</span>
+                  <span className="detail-value">
+                    {selectedCoach.joinDate ? formatDate(selectedCoach.joinDate) : '—'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -178,7 +249,9 @@ const CoachList: React.FC = () => {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Specializations</span>
-                  <span className="detail-value">{selectedCoach.specializations.join(', ')}</span>
+                  <span className="detail-value">
+                    {selectedCoach.specializations.length > 0 ? selectedCoach.specializations.join(', ') : '—'}
+                  </span>
                 </div>
               </div>
             </div>
