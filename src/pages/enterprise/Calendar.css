@@ -1,0 +1,78 @@
+.calendar-page {
+  animation: fadeIn 0.3s ease;
+}
+
+.calendar-grid {
+  margin-top: 24px;
+}
+
+.empty-calendar {
+  padding: 48px 24px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appointment-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 4px solid #4f7cff;
+}
+
+.appointment-time {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4f7cff;
+  min-width: 80px;
+}
+
+.appointment-details {
+  flex: 1;
+}
+
+.appointment-details h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1d2e;
+  margin: 0 0 8px 0;
+}
+
+.appointment-details p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 4px 0;
+}
+
+.appointment-type {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.appointment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}

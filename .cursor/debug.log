@@ -1,0 +1,189 @@
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770680621149,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770680621149,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1","userEmail":"nandha@gmail.com"},"timestamp":1770680621369,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680621369,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770680621369,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770680621370,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680621370,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770680626372,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770680626373,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:122","message":"No user doc found - returning null","data":{},"timestamp":1770680626373,"hypothesisId":"H5"}
+{"location":"AuthContext.tsx:115","message":"Promise.race resolved","data":{"hasUserDoc":false},"timestamp":1770680626373,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770680626373,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770680626636,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770680626637,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1","userEmail":"nandha@gmail.com"},"timestamp":1770680626809,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770680626810,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770680626810,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680626810,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680626810,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770680631818,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770680631817,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770680631818,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:122","message":"No user doc found - returning null","data":{},"timestamp":1770680631818,"hypothesisId":"H5"}
+{"location":"AuthContext.tsx:115","message":"Promise.race resolved","data":{"hasUserDoc":false},"timestamp":1770680631818,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770680680358,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770680680358,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1","userEmail":"nandha@gmail.com"},"timestamp":1770680680476,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680680476,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770680680476,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770680680477,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680680477,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770680685489,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770680685488,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:115","message":"Promise.race resolved","data":{"hasUserDoc":false},"timestamp":1770680685489,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:122","message":"No user doc found - returning null","data":{},"timestamp":1770680685489,"hypothesisId":"H5"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770680685489,"hypothesisId":"H1,H2"}
+{"location":"Login.tsx:36","message":"handleSubmit called","data":{"isSignupMode":false,"email":"Nandha@gmail.com"},"timestamp":1770680697348,"hypothesisId":"H6","runId":"fix2"}
+{"location":"Login.tsx:58","message":"Calling login","data":{"email":"Nandha@gmail.com"},"timestamp":1770680697349,"hypothesisId":"H6","runId":"fix2"}
+{"location":"AuthContext.tsx:63","message":"login called","data":{"email":"Nandha@gmail.com"},"timestamp":1770680697349,"hypothesisId":"H6","runId":"fix2"}
+{"location":"AuthContext.tsx:64","message":"login completed","data":{"email":"Nandha@gmail.com"},"timestamp":1770680697548,"hypothesisId":"H6","runId":"fix2"}
+{"location":"Login.tsx:60","message":"Login successful - navigating to dashboard","data":{},"timestamp":1770680697548,"hypothesisId":"H6","runId":"fix2"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770680698533,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1"},"timestamp":1770680698534,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770680698534,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"fWWOzilseaYEmcNkRlaSmbwH6Ct1","planType":"enterprise"},"timestamp":1770680698534,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Firestore write timeout after 5 seconds"},"timestamp":1770680703539,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770680703541,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770680703540,"hypothesisId":"H4","runId":"fix1"}
+{"location":"ClientOnboard.tsx:53","message":"handleSubmit called","data":{"formData":{"fullName":"Test Client 2","email":"test2@example.com","phone":"5559876543"}},"timestamp":1770680726245,"hypothesisId":"H1","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:57","message":"Validation passed, creating client","data":{"userEmail":"nandha@gmail.com","status":"pending"},"timestamp":1770680726245,"hypothesisId":"H2","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:59","message":"Calling create","data":{"clientData":{"fullName":"Test Client 2","email":"test2@example.com","phone":"5559876543","status":"pending","createdBy":"nandha@gmail.com","createdAt":"2026-02-09T23:45:26.246Z"}},"timestamp":1770680726246,"hypothesisId":"H2","runId":"onboard1"}
+{"location":"useFirestore.ts:85","message":"addDoc called","data":{"collection":"client_profiles"},"timestamp":1770680726246,"hypothesisId":"H2","runId":"onboard1"}
+{"location":"useFirestore.ts:88","message":"addDoc error","data":{"error":"Firestore write timeout after 10 seconds"},"timestamp":1770680736255,"hypothesisId":"H3","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:69","message":"Error creating client","data":{"error":"Firestore write timeout after 10 seconds"},"timestamp":1770680736256,"hypothesisId":"H3","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:53","message":"handleSubmit called","data":{"formData":{"fullName":"Test Client 2","email":"test2@example.com","phone":"5559876543"}},"timestamp":1770681070038,"hypothesisId":"H1","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:57","message":"Validation passed, creating client","data":{"userEmail":"nandha@gmail.com","status":"pending"},"timestamp":1770681070038,"hypothesisId":"H2","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:59","message":"Calling create","data":{"clientData":{"fullName":"Test Client 2","email":"test2@example.com","phone":"5559876543","status":"pending","createdBy":"nandha@gmail.com","createdAt":"2026-02-09T23:51:10.038Z"}},"timestamp":1770681070038,"hypothesisId":"H2","runId":"onboard1"}
+{"location":"useFirestore.ts:85","message":"addDoc called","data":{"collection":"client_profiles"},"timestamp":1770681070039,"hypothesisId":"H2","runId":"onboard1"}
+{"location":"useFirestore.ts:88","message":"addDoc error","data":{"error":"Firestore write timeout after 10 seconds"},"timestamp":1770681080043,"hypothesisId":"H3","runId":"onboard1"}
+{"location":"ClientOnboard.tsx:69","message":"Error creating client","data":{"error":"Firestore write timeout after 10 seconds"},"timestamp":1770681080044,"hypothesisId":"H3","runId":"onboard1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770682878445,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770682878446,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770682878837,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682878837,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770682878837,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682878838,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770682878837,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770682879112,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770682879113,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770682879113,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770682882279,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770682882279,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770682882491,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770682882491,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770682882491,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682882492,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682882491,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770682882706,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770682882706,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770682882706,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770682887493,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770682891648,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770682891647,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770682892028,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682892028,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770682892028,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770682892029,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682892029,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770682892182,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770682892183,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770682892183,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770682897041,"hypothesisId":"H1"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770682980804,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","planType":"enterprise"},"timestamp":1770682980805,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770682980804,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770682980805,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Missing or insufficient permissions."},"timestamp":1770682981076,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770682981076,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770682981077,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770683374914,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770683374914,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770683375377,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683375377,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770683375378,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770683375378,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683375378,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770683375574,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770683375574,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770683375575,"hypothesisId":"H3"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770683376820,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683376821,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","planType":"enterprise"},"timestamp":1770683376821,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770683376821,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Missing or insufficient permissions."},"timestamp":1770683377114,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770683377114,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770683377115,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770683380379,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770683540320,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770683540321,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770683540619,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683540619,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770683540620,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770683540620,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683540621,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770683540789,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770683540790,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770683540789,"hypothesisId":"H1,H2"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770683541990,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683541991,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","planType":"enterprise"},"timestamp":1770683541991,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770683541990,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Missing or insufficient permissions."},"timestamp":1770683542255,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770683542255,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770683542256,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770683545631,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770683595934,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770683595935,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770683596356,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683596356,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770683596356,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770683596356,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683596357,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770683596510,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770683596510,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770683596510,"hypothesisId":"H1,H2"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770683597568,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770683597568,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","planType":"enterprise"},"timestamp":1770683597568,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770683597568,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Missing or insufficient permissions."},"timestamp":1770683597816,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770683597816,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770683597817,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770683601367,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770684059905,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770684059906,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770684060322,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770684060322,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770684060323,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770684060323,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770684060323,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770684060498,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770684060499,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770684060499,"hypothesisId":"H3"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770684061590,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770684061591,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770684061591,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","planType":"enterprise"},"timestamp":1770684061591,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Missing or insufficient permissions."},"timestamp":1770684061848,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770684061848,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770684061849,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770684065326,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770684358664,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:42","message":"Auth state change listener mounted","data":{},"timestamp":1770684358665,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:43","message":"Auth state changed","data":{"hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","userEmail":"inandha97@gmail.com"},"timestamp":1770684359133,"hypothesisId":"H1,H3"}
+{"location":"AuthContext.tsx:47","message":"Calling checkUserPlan","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770684359133,"hypothesisId":"H1,H2"}
+{"location":"AuthContext.tsx:100","message":"checkUserPlan called","data":{"hasCurrentUser":true},"timestamp":1770684359134,"hypothesisId":"H1,H2,H5"}
+{"location":"AuthContext.tsx:108","message":"Timeout set for 5s","data":{},"timestamp":1770684359134,"hypothesisId":"H1"}
+{"location":"AuthContext.tsx:112","message":"Starting getDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770684359134,"hypothesisId":"H2,H5"}
+{"location":"AuthContext.tsx:124","message":"checkUserPlan error caught","data":{"error":"Missing or insufficient permissions."},"timestamp":1770684359296,"hypothesisId":"H2"}
+{"location":"AuthContext.tsx:53","message":"Setting loading to false","data":{"hasUser":true,"plan":null},"timestamp":1770684359296,"hypothesisId":"H3"}
+{"location":"AuthContext.tsx:48","message":"checkUserPlan completed","data":{"plan":null},"timestamp":1770684359296,"hypothesisId":"H1,H2"}
+{"location":"PlanSelection.tsx:63","message":"handlePlanSelect called","data":{"planId":"enterprise"},"timestamp":1770684360443,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:79","message":"savePlan called","data":{"planType":"enterprise","hasUser":true,"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2"},"timestamp":1770684360444,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:87","message":"Calling setDoc","data":{"userId":"lYsxNsxnVefMFOp30jlgbsBpwCq2","planType":"enterprise"},"timestamp":1770684360444,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:69","message":"Calling savePlan","data":{"planId":"enterprise"},"timestamp":1770684360443,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:95","message":"savePlan error or timeout","data":{"error":"Missing or insufficient permissions."},"timestamp":1770684360716,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:70","message":"savePlan completed - navigating","data":{"planId":"enterprise"},"timestamp":1770684360716,"hypothesisId":"H4","runId":"fix1"}
+{"location":"PlanSelection.tsx:71","message":"Navigate called","data":{"path":"/dashboard"},"timestamp":1770684360716,"hypothesisId":"H4","runId":"fix1"}
+{"location":"AuthContext.tsx:109","message":"Timeout triggered - returning null","data":{},"timestamp":1770684364137,"hypothesisId":"H1"}

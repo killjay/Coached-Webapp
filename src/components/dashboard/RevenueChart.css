@@ -1,0 +1,10 @@
+.revenue-chart {
+  height: 350px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .revenue-chart {
+    height: 250px;
+  }
+}
