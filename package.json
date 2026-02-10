@@ -23,7 +23,11 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "seed:coaches": "node scripts/seed-coaches.js",
+    "verify:coaches": "node scripts/verify-coaches.js",
+    "seed:clients": "node scripts/seed-clients.js",
+    "verify:clients": "node scripts/verify-clients.js"
   },
   "eslintConfig": {
     "extends": [
@@ -41,5 +45,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.4",
+    "firebase-admin": "^13.6.1"
   }
 }

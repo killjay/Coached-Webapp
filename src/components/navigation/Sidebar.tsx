@@ -195,13 +195,13 @@ const Sidebar: React.FC = () => {
                 <img src={user.photoURL} alt="Profile" />
               ) : (
                 <div className="avatar-placeholder">
-                  {user?.email?.charAt(0).toUpperCase()}
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               )}
             </div>
             {!isCollapsed && (
               <div className="user-info">
-                <p className="user-email">{user?.email}</p>
+                <p className="user-email">{user?.email || 'User'}</p>
                 <span className="user-plan">Enterprise</span>
               </div>
             )}

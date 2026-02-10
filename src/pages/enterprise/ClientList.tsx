@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -7,38 +7,66 @@ import Select from '../../components/common/Select';
 import Table, { Column } from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import EmptyState from '../../components/common/EmptyState';
+import Loader from '../../components/common/Loader';
 import { useTable } from '../../hooks/useTable';
+import { useFirestore } from '../../hooks/useFirestore';
 import { formatDate } from '../../utils/dateUtils';
-import { MOCK_CLIENTS } from '../../constants';
+import { ClientProfile } from '../../types';
 import './ClientList.css';
 
-interface Client {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  assignedCoach: string;
-  status: 'active' | 'inactive' | 'paused';
-  planType: string;
-  joinDate: string;
-  lastSession: string;
+interface ClientWithCoach extends ClientProfile {
+  assignedCoachName?: string;
 }
 
 const ClientList: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientWithCoach | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [clients, setClients] = useState<ClientWithCoach[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with Firestore data in production
-  const mockClients: Client[] = MOCK_CLIENTS as any;
+  const { getAll: getClients } = useFirestore('client_profiles');
+  const { getAll: getCoaches } = useFirestore('coach_profiles');
+
+  // Fetch clients and coaches from Firestore
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [clientsData, coachesData] = await Promise.all([
+          getClients(),
+          getCoaches()
+        ]);
+
+        // Create a map of coach IDs to names
+        const coachMap = new Map(
+          coachesData.map((coach: any) => [coach.id, coach.fullName])
+        );
+
+        // Add coach names to clients
+        const clientsWithCoaches = clientsData.map((client: any) => ({
+          ...client,
+          assignedCoachName: coachMap.get(client.assignedCoachId) || 'Unassigned'
+        }));
+
+        setClients(clientsWithCoaches);
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const table = useTable({
-    data: mockClients,
+    data: clients,
     initialPageSize: 10,
     initialSortKey: 'fullName',
   });
 
-  const columns: Column<Client>[] = [
+  const columns: Column<ClientWithCoach>[] = [
     {
       key: 'fullName',
       header: 'Name',
@@ -50,7 +78,7 @@ const ClientList: React.FC = () => {
       sortable: true,
     },
     {
-      key: 'assignedCoach',
+      key: 'assignedCoachName',
       header: 'Coach',
       sortable: true,
     },
@@ -70,25 +98,34 @@ const ClientList: React.FC = () => {
       sortable: true,
     },
     {
-      key: 'joinDate',
+      key: 'createdAt',
       header: 'Join Date',
-      render: (client) => formatDate(client.joinDate),
+      render: (client) => formatDate(client.createdAt?.toDate?.() || new Date()),
       sortable: true,
     },
     {
       key: 'actions',
       header: 'Actions',
       render: (client) => (
-        <Button
-          size="small"
-          variant="ghost"
-          onClick={() => {
-            setSelectedClient(client);
-            setShowModal(true);
-          }}
-        >
-          View
-        </Button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            size="small"
+            variant="primary"
+            onClick={() => navigate(`/enterprise/client-dashboard/${client.id}`)}
+          >
+            Dashboard
+          </Button>
+          <Button
+            size="small"
+            variant="ghost"
+            onClick={() => {
+              setSelectedClient(client);
+              setShowModal(true);
+            }}
+          >
+            View
+          </Button>
+        </div>
       ),
     },
   ];
@@ -105,7 +142,12 @@ const ClientList: React.FC = () => {
         </Button>
       </div>
 
-      <Card>
+      {loading ? (
+        <Card>
+          <Loader />
+        </Card>
+      ) : (
+        <Card>
         <div className="list-filters">
           <Input
             placeholder="Search clients..."
@@ -190,6 +232,7 @@ const ClientList: React.FC = () => {
           </>
         )}
       </Card>
+      )}
 
       {/* Client Detail Modal */}
       <Modal
@@ -232,15 +275,21 @@ const ClientList: React.FC = () => {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Assigned Coach</span>
-                  <span className="detail-value">{selectedClient.assignedCoach}</span>
+                  <span className="detail-value">{selectedClient.assignedCoachName || 'Unassigned'}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Join Date</span>
-                  <span className="detail-value">{formatDate(selectedClient.joinDate)}</span>
+                  <span className="detail-value">
+                    {formatDate(selectedClient.createdAt?.toDate?.() || new Date())}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Last Session</span>
-                  <span className="detail-value">{formatDate(selectedClient.lastSession)}</span>
+                  <span className="detail-value">
+                    {selectedClient.metrics?.lastSessionDate 
+                      ? formatDate(selectedClient.metrics.lastSessionDate.toDate()) 
+                      : 'No sessions yet'}
+                  </span>
                 </div>
               </div>
             </div>
