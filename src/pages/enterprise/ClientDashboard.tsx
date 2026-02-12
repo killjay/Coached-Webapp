@@ -17,8 +17,17 @@ import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 import { useFirestore } from '../../hooks/useFirestore';
 import { formatDate } from '../../utils/dateUtils';
-import { ClientProfile, ClientProgress, Measurement, WeightEntry, NutritionPlanItem } from '../../types';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  ClientProfile,
+  ClientProgress,
+  Measurement,
+  WeightEntry,
+  NutritionPlanItem,
+  Template,
+  TemplateAssignment,
+  WorkoutPlan,
+} from '../../types';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import './ClientDashboard.css';
 
@@ -39,11 +48,15 @@ const ClientDashboard: React.FC = () => {
   const [client, setClient] = useState<ClientProfile | null>(null);
   const [coachName, setCoachName] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'weight' | 'measurements' | 'meals'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'weight' | 'measurements' | 'meals' | 'workout'>('overview');
   const [weightPeriod, setWeightPeriod] = useState<'1month' | '6months' | 'all'>('all');
   const [bodyMeasurements, setBodyMeasurements] = useState<Measurement[]>([]);
   const [weightEntries, setWeightEntries] = useState<WeightEntry[]>([]);
   const [mealPlan, setMealPlan] = useState<any>(null);
+  const [workoutAssignment, setWorkoutAssignment] = useState<TemplateAssignment | null>(null);
+  const [workoutTemplate, setWorkoutTemplate] = useState<Template | null>(null);
+  const [workoutLoading, setWorkoutLoading] = useState(false);
+  const [workoutError, setWorkoutError] = useState<string | null>(null);
 
   const { getById: getClient } = useFirestore('client_profiles');
   const { getById: getCoach } = useFirestore('coach_profiles');
@@ -90,15 +103,59 @@ const ClientDashboard: React.FC = () => {
             }
           }
         }
+
+        // Fetch assigned workout plan (template assignment + template)
+        setWorkoutError(null);
+        setWorkoutLoading(true);
+        setWorkoutAssignment(null);
+        setWorkoutTemplate(null);
+
+        const assignmentQuery = query(
+          collection(db, 'template_assignments'),
+          where('clientId', '==', clientId),
+          where('status', '==', 'active')
+        );
+        const assignmentSnap = await getDocs(assignmentQuery);
+        const assignment = assignmentSnap.docs[0]?.data() as TemplateAssignment | undefined;
+        if (assignment?.templateId) {
+          setWorkoutAssignment(assignment);
+          const templateRef = doc(db, 'templates', assignment.templateId);
+          const templateSnap = await getDoc(templateRef);
+          if (templateSnap.exists()) {
+            setWorkoutTemplate({ id: templateSnap.id, ...(templateSnap.data() as any) } as Template);
+          }
+        }
       } catch (error) {
         console.error('Error fetching client:', error);
+        setWorkoutError('Failed to load workout plan.');
       } finally {
         setLoading(false);
+        setWorkoutLoading(false);
       }
     };
 
     fetchData();
-  }, [clientId]);
+  }, [clientId, getClient, getCoach]);
+
+  const toYouTubeEmbed = (url: string): string | null => {
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, '');
+      let id: string | null = null;
+      if (host === 'youtu.be') id = u.pathname.replace('/', '') || null;
+      if (host === 'youtube.com' || host === 'm.youtube.com') {
+        id = u.searchParams.get('v');
+        if (!id) {
+          const parts = u.pathname.split('/').filter(Boolean);
+          const idx = parts.findIndex((p) => p === 'shorts' || p === 'embed');
+          if (idx >= 0 && parts[idx + 1]) id = parts[idx + 1];
+        }
+      }
+      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+    } catch {
+      return null;
+    }
+  };
 
   // Filter weight data based on selected period
   const getFilteredWeightData = () => {
@@ -359,6 +416,12 @@ const ClientDashboard: React.FC = () => {
           onClick={() => setActiveTab('meals')}
         >
           Meal Plan
+        </button>
+        <button 
+          className={`tab ${activeTab === 'workout' ? 'active' : ''}`}
+          onClick={() => setActiveTab('workout')}
+        >
+          Workout Plan
         </button>
       </div>
 
@@ -937,6 +1000,71 @@ const ClientDashboard: React.FC = () => {
             </Card>
           </div>
           </>
+        )}
+
+        {/* Workout Plan Tab */}
+        {activeTab === 'workout' && (
+          <Card className="workout-plan-card">
+            <div className="section-header">
+              <h3>Assigned Workout Plan</h3>
+              {workoutTemplate?.name && (
+                <span className="section-subtitle">{workoutTemplate.name}</span>
+              )}
+            </div>
+
+            {workoutLoading ? (
+              <Loader />
+            ) : workoutError ? (
+              <div className="error-state">
+                <p>{workoutError}</p>
+              </div>
+            ) : !workoutAssignment || !workoutTemplate ? (
+              <div className="empty-state">
+                <p>No active workout plan assigned.</p>
+              </div>
+            ) : (
+              <div className="workout-schedule">
+                {Object.entries(((workoutTemplate.content as WorkoutPlan)?.schedule || {}) as Record<string, any[]>).map(
+                  ([day, exercises]) => (
+                    <div key={day} className="workout-day">
+                      <h4 className="workout-day-title">{day}</h4>
+                      {!exercises || exercises.length === 0 ? (
+                        <p className="muted">No exercises</p>
+                      ) : (
+                        <div className="workout-exercises">
+                          {exercises.map((ex: any) => {
+                            const embed = ex?.videoURL ? toYouTubeEmbed(ex.videoURL) : null;
+                            return (
+                              <div key={ex.id || ex.name} className="workout-exercise">
+                                <div className="workout-exercise-name">{ex.name}</div>
+                                <div className="workout-exercise-meta">
+                                  {ex.sets}×{ex.reps} • Rest {ex.restPeriod}s
+                                  {ex.muscleGroups?.length ? ` • ${ex.muscleGroups.join(', ')}` : ''}
+                                </div>
+                                {ex.instructions && (
+                                  <div className="workout-exercise-notes">{ex.instructions}</div>
+                                )}
+                                {embed && (
+                                  <div className="workout-video">
+                                    <iframe
+                                      title={`${ex.name} video`}
+                                      src={embed}
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                      allowFullScreen
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+          </Card>
         )}
       </div>
       </div>

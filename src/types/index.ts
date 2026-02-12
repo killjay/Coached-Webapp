@@ -353,6 +353,8 @@ export interface WorkoutPlan {
 export interface Exercise {
   id: string;
   name: string;
+  // Muscle groups / body parts targeted (e.g., Chest, Back, Legs)
+  muscleGroups?: string[];
   sets: number;
   reps: number;
   restPeriod: number; // in seconds
@@ -435,6 +437,17 @@ export interface RecurringConfig {
   frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
   endDate?: Timestamp;
   occurrences?: number;
+}
+
+// Coach Tasks (Todo / Follow-ups)
+export interface CoachTask {
+  id: string;
+  coachId: string;
+  title: string;
+  dueDate: Timestamp;
+  status: 'open' | 'done';
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 // Role

@@ -15,6 +15,7 @@ import Calendar from './pages/enterprise/Calendar';
 import RolesManagement from './pages/enterprise/RolesManagement';
 import PendingClients from './pages/enterprise/PendingClients';
 import ClientDashboard from './pages/enterprise/ClientDashboard';
+import WorkoutPlanner from './pages/enterprise/WorkoutPlanner';
 import './App.css';
 
 // Protected Route Component
@@ -135,6 +136,7 @@ const AppRoutes: React.FC = () => {
         <Route path="client-dashboard/:clientId" element={<ClientDashboard />} />
         <Route path="coaches" element={<CoachList />} />
         <Route path="templates" element={<CreateTemplate />} />
+        <Route path="workout-planner" element={<WorkoutPlanner />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="roles" element={<RolesManagement />} />
         <Route index element={<Navigate to="revenue" replace />} />

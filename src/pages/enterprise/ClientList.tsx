@@ -58,7 +58,7 @@ const ClientList: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [getClients, getCoaches]);
 
   const table = useTable({
     data: clients,
