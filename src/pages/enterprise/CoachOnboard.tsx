@@ -150,7 +150,6 @@ const CoachOnboard: React.FC = () => {
     <div className="client-onboard-page coach-onboard-page">
       <div className="page-header">
         <h1 className="page-title">Coach Onboarding</h1>
-        <p className="page-description">Register new coaches on the platform</p>
       </div>
 
       <div className="onboarding-steps">

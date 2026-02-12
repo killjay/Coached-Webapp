@@ -139,9 +139,6 @@ const PendingClients: React.FC = () => {
     <div className="pending-clients-page">
       <div className="page-header">
         <h1 className="page-title">Pending Clients</h1>
-        <p className="page-description">
-          Clients who have completed their onboarding form and are waiting for coach assignment
-        </p>
       </div>
 
       {coachesError && (

@@ -135,7 +135,6 @@ const ClientList: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Client List</h1>
-          <p className="page-description">View and manage all clients</p>
         </div>
         <Button variant="primary" onClick={() => navigate('/enterprise/client-onboard')}>
           + Add Client

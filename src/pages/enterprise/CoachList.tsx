@@ -153,7 +153,6 @@ const CoachList: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Coach List</h1>
-          <p className="page-description">View and manage all coaches</p>
         </div>
         <Button variant="primary" onClick={() => navigate('/enterprise/coach-onboard')}>
           + Add Coach

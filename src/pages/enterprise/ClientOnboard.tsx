@@ -216,28 +216,27 @@ const ClientOnboard: React.FC = () => {
     <div className="client-onboard-page">
       <div className="page-header">
         <h1 className="page-title">{UI_MESSAGES.CLIENT_ONBOARDING.TITLE}</h1>
-        <p className="page-description">{UI_MESSAGES.CLIENT_ONBOARDING.DESCRIPTION}</p>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="onboarding-steps">
+        {steps.map((step) => (
+          <div
+            key={step.number}
+            className={`step ${currentStep === step.number ? 'active' : ''} ${
+              currentStep > step.number ? 'completed' : ''
+            }`}
+          >
+            <div className="step-number">{step.number}</div>
+            <div className="step-content">
+              <div className="step-title">{step.title}</div>
+              <div className="step-description">{step.description}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
       <Card>
-        {/* Progress Steps */}
-        <div className="onboarding-steps">
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              className={`step ${currentStep === step.number ? 'active' : ''} ${
-                currentStep > step.number ? 'completed' : ''
-              }`}
-            >
-              <div className="step-number">{step.number}</div>
-              <div className="step-content">
-                <div className="step-title">{step.title}</div>
-                <div className="step-description">{step.description}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Step 1: Personal Information */}
         {currentStep === 1 && (
           <div className="form-step">

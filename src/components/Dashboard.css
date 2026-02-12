@@ -24,7 +24,7 @@
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #161616;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -111,7 +111,7 @@
   height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  background: linear-gradient(135deg, #4f7cff 0%, #3d63d9 100%);
+  background: #161616;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -165,7 +165,7 @@
 }
 
 .plan-badge.individual {
-  background: linear-gradient(135deg, #4f7cff 0%, #3d63d9 100%);
+  background: #161616;
   color: white;
 }
 
@@ -175,7 +175,7 @@
 }
 
 .plan-badge.enterprise {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #161616;
   color: white;
 }
 

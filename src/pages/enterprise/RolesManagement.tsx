@@ -32,7 +32,6 @@ const RolesManagement: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Roles Management</h1>
-          <p className="page-description">Configure permissions and user access</p>
         </div>
         <Button variant="primary">+ Create Role</Button>
       </div>

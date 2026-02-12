@@ -22,13 +22,13 @@
 }
 
 .step.active {
-  border-color: #4f7cff;
-  background: rgba(79, 124, 255, 0.05);
+  border-color: rgba(0, 0, 0, 1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .step.completed {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.05);
+  border: none;
+  background: rgba(53, 94, 59, 1);
 }
 
 .step-number {
@@ -47,12 +47,12 @@
 }
 
 .step.active .step-number {
-  background: #4f7cff;
+  background: rgba(0, 0, 0, 1);
   color: white;
 }
 
 .step.completed .step-number {
-  background: #10b981;
+  background: rgba(53, 94, 59, 1);
   color: white;
 }
 
@@ -71,6 +71,14 @@
 .step-description {
   font-size: 12px;
   color: #6b7280;
+}
+
+.step.completed .step-title {
+  color: rgba(255, 255, 255, 1);
+}
+
+.step.completed .step-description {
+  color: rgba(212, 212, 212, 1);
 }
 
 .form-step {

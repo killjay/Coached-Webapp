@@ -101,7 +101,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Request access to user's profile and email
     provider.addScope('profile');
     provider.addScope('email');
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    
+    // Debug: Log the user data after sign-in
+    console.log('Google sign-in result:', {
+      email: result.user.email,
+      photoURL: result.user.photoURL,
+      displayName: result.user.displayName,
+      providerId: result.user.providerId,
+    });
   };
 
   const savePlan = async (planType: string) => {

@@ -49,7 +49,6 @@ const Calendar: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Calendar</h1>
-          <p className="page-description">Manage appointments and scheduling</p>
         </div>
         <div className="page-actions">
           <Select

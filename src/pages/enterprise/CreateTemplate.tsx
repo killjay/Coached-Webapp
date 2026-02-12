@@ -31,7 +31,6 @@ const CreateTemplate: React.FC = () => {
     <div className="create-template-page">
       <div className="page-header">
         <h1 className="page-title">Create Template</h1>
-        <p className="page-description">Build workout and nutrition templates</p>
       </div>
 
       <Card title="Template Details">

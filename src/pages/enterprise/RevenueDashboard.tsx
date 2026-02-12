@@ -44,7 +44,6 @@ const RevenueDashboard: React.FC = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">{DASHBOARD_LABELS.REVENUE.TITLE}</h1>
-          <p className="page-description">{DASHBOARD_LABELS.REVENUE.DESCRIPTION}</p>
         </div>
         <div className="page-actions">
           <Select

@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
@@ -8,6 +17,15 @@ import { useFirestore } from '../../hooks/useFirestore';
 import { formatDate } from '../../utils/dateUtils';
 import { ClientProfile } from '../../types';
 import './ClientDashboard.css';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const ClientDashboard: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -50,10 +68,11 @@ const ClientDashboard: React.FC = () => {
       {
         label: 'Weight (kg)',
         data: [95, 93.44, 92.44, 90.8, 89.9, 90, 88, 87.6],
+        backgroundColor: 'rgba(79, 124, 255, 0.8)',
         borderColor: '#4f7cff',
-        backgroundColor: 'rgba(79, 124, 255, 0.1)',
-        tension: 0.4,
-        fill: true,
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false,
       },
     ],
   };
@@ -140,33 +159,43 @@ const ClientDashboard: React.FC = () => {
   const progressPercentage = ((weightLoss / startingWeight) * 100).toFixed(1);
 
   return (
-    <div className="client-dashboard-page">
-      {/* Header */}
-      <div className="dashboard-header">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/enterprise/clients')}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: '20px', height: '20px', marginRight: '8px' }}>
-            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-          </svg>
-          Back
-        </Button>
-        <div className="header-info">
-          <h1 className="client-name">{client.fullName}</h1>
-          <p className="client-subtitle">Transformation Dashboard</p>
+    <>
+      <Button
+        variant="ghost"
+        className="back-to-list-btn"
+        onClick={() => navigate('/enterprise/clients')}
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: '20px', height: '20px', marginRight: '8px' }}>
+          <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+        </svg>
+        Back
+      </Button>
+      <div className="client-dashboard-page">
+        {/* Header */}
+        <div className="dashboard-header">
+          <div className="header-info">
+            <h1 className="client-name">{client.fullName}</h1>
+          </div>
+          <div className="client-subtitle">
+            <div>{client.email}</div>
+            <div>{client.phone}</div>
+            <div>Age: {client.dateOfBirth ? new Date().getFullYear() - new Date(client.dateOfBirth).getFullYear() : 'N/A'}</div>
+            <div>Joined: {formatDate(client.createdAt?.toDate?.() || new Date())}</div>
+          </div>
+          <div className="header-divider"></div>
+          <div className="fitness-goals-summary">
+            <div><strong>Primary Goal:</strong> {client.fitnessGoals?.primaryGoal?.replace('_', ' ')}</div>
+            {client.fitnessGoals?.targetWeight && (
+              <div><strong>Target Weight:</strong> {client.fitnessGoals.targetWeight} kg</div>
+            )}
+            <div><strong>Plan:</strong> {client.planType}</div>
+          </div>
         </div>
-      </div>
 
       {/* Client Info Cards */}
       <div className="info-cards">
         <Card className="info-card">
           <div className="info-card-content">
-            <div className="info-icon weight-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-              </svg>
-            </div>
             <div className="info-details">
               <span className="info-label">Current Weight</span>
               <span className="info-value">{currentWeight} kg</span>
@@ -177,11 +206,6 @@ const ClientDashboard: React.FC = () => {
 
         <Card className="info-card">
           <div className="info-card-content">
-            <div className="info-icon progress-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
             <div className="info-details">
               <span className="info-label">Total Progress</span>
               <span className="info-value">{progressPercentage}%</span>
@@ -192,11 +216,6 @@ const ClientDashboard: React.FC = () => {
 
         <Card className="info-card">
           <div className="info-card-content">
-            <div className="info-icon goal-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
             <div className="info-details">
               <span className="info-label">Goal</span>
               <span className="info-value">{client.fitnessGoals?.primaryGoal?.replace('_', ' ')}</span>
@@ -207,11 +226,6 @@ const ClientDashboard: React.FC = () => {
 
         <Card className="info-card">
           <div className="info-card-content">
-            <div className="info-icon coach-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
             <div className="info-details">
               <span className="info-label">Coach</span>
               <span className="info-value small">{coachName}</span>
@@ -257,72 +271,7 @@ const ClientDashboard: React.FC = () => {
             <Card className="weight-chart-card">
               <h3 className="card-title">Weight Progress</h3>
               <div className="chart-container">
-                <Line data={mockWeightData} options={chartOptions} />
-              </div>
-            </Card>
-
-            <Card className="client-details-card">
-              <h3 className="card-title">Client Details</h3>
-              <div className="details-list">
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{client.email}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Phone:</span>
-                  <span className="detail-value">{client.phone}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Age:</span>
-                  <span className="detail-value">
-                    {client.dateOfBirth ? new Date().getFullYear() - new Date(client.dateOfBirth).getFullYear() : 'N/A'} years
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Joined:</span>
-                  <span className="detail-value">
-                    {formatDate(client.createdAt?.toDate?.() || new Date())}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Sessions:</span>
-                  <span className="detail-value">{client.metrics?.sessionCount || 0}</span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="goals-card">
-              <h3 className="card-title">Fitness Goals</h3>
-              <div className="goals-list">
-                <div className="goal-item">
-                  <div className="goal-icon">🎯</div>
-                  <div className="goal-content">
-                    <h4>Primary Goal</h4>
-                    <p>{client.fitnessGoals?.primaryGoal?.replace('_', ' ')}</p>
-                  </div>
-                </div>
-                {client.fitnessGoals?.specificGoals && client.fitnessGoals.specificGoals.length > 0 && (
-                  <div className="goal-item">
-                    <div className="goal-icon">✅</div>
-                    <div className="goal-content">
-                      <h4>Specific Goals</h4>
-                      <ul>
-                        {client.fitnessGoals.specificGoals.map((goal, index) => (
-                          <li key={index}>{goal}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-                {client.fitnessGoals?.targetWeight && (
-                  <div className="goal-item">
-                    <div className="goal-icon">🎪</div>
-                    <div className="goal-content">
-                      <h4>Target Weight</h4>
-                      <p>{client.fitnessGoals.targetWeight} kg</p>
-                    </div>
-                  </div>
-                )}
+                <Bar data={mockWeightData} options={chartOptions} />
               </div>
             </Card>
           </div>
@@ -476,27 +425,40 @@ const ClientDashboard: React.FC = () => {
 
         {/* Meal Plan Tab */}
         {activeTab === 'meals' && (
-          <div className="meal-plan-grid">
-            <Card className="nutrition-summary">
-              <h3 className="card-title">Daily Nutrition Target</h3>
-              <div className="nutrition-stats">
+          <>
+            <h3 className="card-title">Daily Nutrition Target</h3>
+            
+            <div className="nutrition-cards-container">
+              <Card className="nutrition-stat-card">
                 <div className="nutrition-stat">
                   <div className="stat-value">{mealPlan.nutrition.calories}</div>
                   <div className="stat-label">Calories</div>
                 </div>
+              </Card>
+
+              <Card className="nutrition-stat-card">
                 <div className="nutrition-stat">
                   <div className="stat-value">{mealPlan.nutrition.carbs}</div>
                   <div className="stat-label">Carbs</div>
                 </div>
+              </Card>
+
+              <Card className="nutrition-stat-card">
                 <div className="nutrition-stat">
                   <div className="stat-value">{mealPlan.nutrition.protein}</div>
                   <div className="stat-label">Protein</div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
 
+            <h3 className="card-title">Daily Nutrition Target</h3>
+
+            <div className="meal-plan-grid">
             <Card className="meal-card">
-              <h4 className="meal-title">🏋️ Pre Workout</h4>
+              <h4 className="meal-title">
+                <span>Pre Workout</span>
+                <span className="meal-time">6:00 AM</span>
+              </h4>
               <ul className="meal-list">
                 <li>{mealPlan.preWorkout.option1}</li>
                 <li>{mealPlan.preWorkout.food}</li>
@@ -504,7 +466,10 @@ const ClientDashboard: React.FC = () => {
             </Card>
 
             <Card className="meal-card">
-              <h4 className="meal-title">💪 Post Workout</h4>
+              <h4 className="meal-title">
+                <span>Post Workout</span>
+                <span className="meal-time">8:00 AM</span>
+              </h4>
               <ul className="meal-list">
                 <li>{mealPlan.postWorkout.option1}</li>
                 <li>{mealPlan.postWorkout.option2}</li>
@@ -512,7 +477,10 @@ const ClientDashboard: React.FC = () => {
             </Card>
 
             <Card className="meal-card">
-              <h4 className="meal-title">🍳 Breakfast</h4>
+              <h4 className="meal-title">
+                <span>Breakfast</span>
+                <span className="meal-time">9:00 AM</span>
+              </h4>
               <p className="meal-name">{mealPlan.breakfast.name}</p>
               <ul className="meal-list">
                 {mealPlan.breakfast.items.map((item, index) => (
@@ -522,7 +490,10 @@ const ClientDashboard: React.FC = () => {
             </Card>
 
             <Card className="meal-card">
-              <h4 className="meal-title">🥗 Snacks</h4>
+              <h4 className="meal-title">
+                <span>Snacks</span>
+                <span className="meal-time">12:00 PM</span>
+              </h4>
               <p className="meal-name">{mealPlan.snacks.name}</p>
               <ul className="meal-list">
                 {mealPlan.snacks.items.map((item, index) => (
@@ -532,7 +503,10 @@ const ClientDashboard: React.FC = () => {
             </Card>
 
             <Card className="meal-card">
-              <h4 className="meal-title">🍗 Lunch</h4>
+              <h4 className="meal-title">
+                <span>Lunch</span>
+                <span className="meal-time">2:00 PM</span>
+              </h4>
               <p className="meal-name">{mealPlan.lunch.name}</p>
               <ul className="meal-list">
                 {mealPlan.lunch.items.map((item, index) => (
@@ -542,7 +516,10 @@ const ClientDashboard: React.FC = () => {
             </Card>
 
             <Card className="meal-card">
-              <h4 className="meal-title">🍛 Dinner</h4>
+              <h4 className="meal-title">
+                <span>Dinner</span>
+                <span className="meal-time">7:00 PM</span>
+              </h4>
               <p className="meal-name">{mealPlan.dinner.name}</p>
               <ul className="meal-list">
                 {mealPlan.dinner.items.map((item, index) => (
@@ -551,9 +528,11 @@ const ClientDashboard: React.FC = () => {
               </ul>
             </Card>
           </div>
+          </>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
