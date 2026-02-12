@@ -289,14 +289,6 @@ const ClientDashboard: React.FC = () => {
             <div>Age: {client.dateOfBirth ? new Date().getFullYear() - new Date(client.dateOfBirth).getFullYear() : 'N/A'}</div>
             <div>Joined: {formatDate(client.createdAt?.toDate?.() || new Date())}</div>
           </div>
-          <div className="header-divider"></div>
-          <div className="fitness-goals-summary">
-            <div><strong>Primary Goal:</strong> {client.fitnessGoals?.primaryGoal?.replace('_', ' ')}</div>
-            {client.fitnessGoals?.targetWeight && (
-              <div><strong>Target Weight:</strong> {client.fitnessGoals.targetWeight} kg</div>
-            )}
-            <div><strong>Plan:</strong> {client.planType}</div>
-          </div>
         </div>
 
       {/* Client Info Cards */}
@@ -619,9 +611,8 @@ const ClientDashboard: React.FC = () => {
           <>
             {bodyMeasurements.length > 0 ? (
               <>
-                <Card>
-                  <h3 className="card-title">Body Measurements Progress</h3>
-                  <div className="measurements-grid">
+                <h3 className="card-title">Body Measurements Progress</h3>
+                <div className="measurements-grid">
                     <div className="measurement-card">
                       <h4>Chest & Shoulders</h4>
                       <div className="measurement-row">
@@ -758,10 +749,9 @@ const ClientDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </Card>
                 
+                <h3 className="section-title">Weekly Measurements</h3>
                 <div className="measurements-table-container">
-                  <h4 className="section-title">Weekly Measurements</h4>
                   <table className="measurements-table">
                     <thead>
                       <tr>
