@@ -38,15 +38,17 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
       {
         label: 'Revenue',
         data: data.revenue,
-        borderColor: '#4f7cff',
-        backgroundColor: 'rgba(79, 124, 255, 0.1)',
-        fill: true,
-        tension: 0.4,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+        borderWidth: 2,
         pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#4f7cff',
-        pointBorderColor: '#fff',
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
+        pointHoverRadius: 6,
+        pointHoverBorderWidth: 2,
+        tension: 0.1,
+        fill: false,
       },
     ],
   };
@@ -54,28 +56,54 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
   const options: any = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
         display: false,
       },
       tooltip: {
-        backgroundColor: '#1a1d2e',
+        enabled: true,
+        backgroundColor: 'white',
+        titleColor: '#1f2937',
+        bodyColor: '#1f2937',
+        borderColor: '#3b82f6',
+        borderWidth: 1,
         padding: 12,
-        titleFont: {
-          size: 14,
-          weight: 'bold',
-        },
-        bodyFont: {
-          size: 13,
-        },
+        bodySpacing: 6,
+        boxPadding: 6,
+        usePointStyle: true,
+        displayColors: true,
         callbacks: {
           label: function (context: any) {
-            return `Revenue: $${context.parsed.y.toLocaleString()}`;
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            label += '$' + context.parsed.y.toLocaleString();
+            return label;
           },
         },
       },
     },
     scales: {
+      x: {
+        grid: {
+          color: '#e5e7eb',
+          drawBorder: true,
+          borderColor: '#333333',
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11,
+          },
+          maxRotation: 45,
+          minRotation: 45,
+        },
+      },
       y: {
         beginAtZero: true,
         grid: {
@@ -83,23 +111,15 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
           drawBorder: false,
         },
         ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11,
+          },
           callback: function (value: any) {
-            return '$' + (value / 1000).toFixed(0) + 'k';
-          },
-          color: '#6b7280',
-          font: {
-            size: 12,
-          },
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: '#6b7280',
-          font: {
-            size: 12,
+            if (value >= 1000) {
+              return '$' + (value / 1000) + 'k';
+            }
+            return '$' + value;
           },
         },
       },

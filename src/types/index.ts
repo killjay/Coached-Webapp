@@ -128,6 +128,7 @@ export interface ClientSettings {
 export interface ClientProgress {
   clientId: string;
   measurements: Measurement[];
+  weightEntries: WeightEntry[];
   milestones: Milestone[];
   lastUpdated: Timestamp;
   createdAt: Timestamp;
@@ -135,17 +136,38 @@ export interface ClientProgress {
 
 export interface Measurement {
   date: string;
+  week?: string; // e.g., "Week 1", "Week 13"
   weight?: number;
   bodyFat?: number;
   muscleMass?: number;
   measurements?: {
     chest?: number;
-    waist?: number;
+    shoulders?: number;
+    leftArm?: number;
+    rightArm?: number;
+    leftArmFlexed?: number;
+    rightArmFlexed?: number;
+    leftForearm?: number;
+    rightForearm?: number;
+    neck?: number;
+    leftThigh?: number;
+    rightThigh?: number;
+    waistMiddle?: number;
     hips?: number;
-    arms?: number;
-    legs?: number;
+    glutes?: number;
+    leftCalf?: number;
+    rightCalf?: number;
   };
   notes?: string;
+}
+
+export interface WeightEntry {
+  day: number;
+  date: string;
+  weight: string; // kg
+  change: string; // change from start
+  progress: number; // percentage
+  weekLabel: string;
 }
 
 export interface Milestone {

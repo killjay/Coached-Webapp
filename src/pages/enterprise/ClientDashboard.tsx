@@ -1,30 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 import { useFirestore } from '../../hooks/useFirestore';
 import { formatDate } from '../../utils/dateUtils';
-import { ClientProfile } from '../../types';
+import { ClientProfile, ClientProgress, Measurement, WeightEntry, NutritionPlanItem } from '../../types';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import './ClientDashboard.css';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const ClientDashboard: React.FC = () => {
@@ -34,6 +40,10 @@ const ClientDashboard: React.FC = () => {
   const [coachName, setCoachName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'weight' | 'measurements' | 'meals'>('overview');
+  const [weightPeriod, setWeightPeriod] = useState<'1month' | '6months' | 'all'>('all');
+  const [bodyMeasurements, setBodyMeasurements] = useState<Measurement[]>([]);
+  const [weightEntries, setWeightEntries] = useState<WeightEntry[]>([]);
+  const [mealPlan, setMealPlan] = useState<any>(null);
 
   const { getById: getClient } = useFirestore('client_profiles');
   const { getById: getCoach } = useFirestore('coach_profiles');
@@ -51,6 +61,35 @@ const ClientDashboard: React.FC = () => {
           const coachData = await getCoach(clientData.assignedCoachId);
           setCoachName(coachData?.fullName || 'Unassigned');
         }
+
+        // Fetch client progress data (measurements and weight entries)
+        const progressDocRef = doc(db, 'client_progress', clientId);
+        const progressDoc = await getDoc(progressDocRef);
+        
+        if (progressDoc.exists()) {
+          const progressData = progressDoc.data() as ClientProgress;
+          setBodyMeasurements(progressData.measurements || []);
+          setWeightEntries(progressData.weightEntries || []);
+        } else {
+          // Initialize empty arrays if no progress data exists
+          setBodyMeasurements([]);
+          setWeightEntries([]);
+        }
+
+        // Fetch nutrition plan
+        const nutritionDocRef = doc(db, 'nutrition_plans', clientId);
+        const nutritionDoc = await getDoc(nutritionDocRef);
+        
+        if (nutritionDoc.exists()) {
+          const nutritionData = nutritionDoc.data();
+          const currentPlanId = nutritionData.currentPlan;
+          if (currentPlanId && nutritionData.plans) {
+            const currentPlan = nutritionData.plans.find((p: NutritionPlanItem) => p.id === currentPlanId);
+            if (currentPlan) {
+              setMealPlan(currentPlan);
+            }
+          }
+        }
       } catch (error) {
         console.error('Error fetching client:', error);
       } finally {
@@ -61,18 +100,43 @@ const ClientDashboard: React.FC = () => {
     fetchData();
   }, [clientId]);
 
-  // Mock weight data (we'll store this in Firestore later)
+  // Filter weight data based on selected period
+  const getFilteredWeightData = () => {
+    const allData = weightEntries;
+    
+    switch (weightPeriod) {
+      case '1month':
+        // Last 4 weeks
+        return allData.slice(-4);
+      case '6months':
+        // Last 26 weeks (approximately 6 months)
+        return allData.slice(-26);
+      case 'all':
+      default:
+        return allData;
+    }
+  };
+
+  const filteredWeightData = getFilteredWeightData();
+
+  // Mock weight data for chart - use filtered weekly data
   const mockWeightData = {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+    labels: filteredWeightData.map(entry => entry.weekLabel),
     datasets: [
       {
         label: 'Weight (kg)',
-        data: [95, 93.44, 92.44, 90.8, 89.9, 90, 88, 87.6],
-        backgroundColor: 'rgba(79, 124, 255, 0.8)',
-        borderColor: '#4f7cff',
+        data: filteredWeightData.map(entry => parseFloat(entry.weight)),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.05)',
         borderWidth: 2,
-        borderRadius: 8,
-        borderSkipped: false,
+        pointRadius: 4,
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+        pointHoverBorderWidth: 2,
+        tension: 0.1,
+        fill: false,
       },
     ],
   };
@@ -80,53 +144,96 @@ const ClientDashboard: React.FC = () => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         display: false,
       },
       tooltip: {
-        backgroundColor: '#1a1d2e',
-        padding: 12,
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#4f7cff',
+        enabled: true,
+        backgroundColor: 'white',
+        titleColor: '#1f2937',
+        bodyColor: '#1f2937',
+        borderColor: '#3b82f6',
         borderWidth: 1,
+        padding: 12,
+        bodySpacing: 6,
+        boxPadding: 6,
+        usePointStyle: true,
+        displayColors: true,
+        callbacks: {
+          label: function(context: any) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            label += context.parsed.y + ' kg';
+            return label;
+          }
+        }
       },
     },
     scales: {
+      x: {
+        grid: {
+          color: '#e5e7eb',
+          drawBorder: true,
+          borderColor: '#333333',
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11,
+          },
+          maxRotation: 45,
+          minRotation: 45,
+        },
+      },
       y: {
         beginAtZero: false,
         grid: {
           color: '#e5e7eb',
+          drawBorder: false,
         },
         ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11,
+          },
           callback: (value: any) => `${value} kg`,
-        },
-      },
-      x: {
-        grid: {
-          display: false,
         },
       },
     },
   };
 
-  // Mock body measurements
-  const bodyMeasurements = [
-    { week: 'Week 1', date: '3/6/2025', leftArm: 13, rightArm: 13, leftThigh: 24, rightThigh: 24, waistMiddle: 30 },
-    { week: 'Week 4', date: '4/13/2025', leftArm: 13, rightArm: 13, leftThigh: 22, rightThigh: 22, waistMiddle: 35 },
-  ];
-
-  // Mock meal plan
-  const mealPlan = {
-    preWorkout: { option1: 'Green Tea/Black Coffee', option2: 'Green Tea/Black Coffee', food: 'Orange 150g / Watermelon 300g' },
-    postWorkout: { option1: 'Greek Yogurt 200g', option2: 'Egg Whites 5' },
-    breakfast: { name: 'Bread Omelette / Peanut Butter Sandwich', items: ['Wheat Bread 2 slices', 'Egg Whites 6', 'Add Veggies 150g'] },
-    snacks: { name: 'Green Tea / Protein Bar', items: ['Protein Bar 1 (20g protein)', 'Greek Yogurt 200g'] },
-    lunch: { name: 'Chicken / Paneer', items: ['Cooked Chapati 60g / Rice 150g', 'Chicken 200g / Tofu 200g', 'Salad 200g'] },
-    dinner: { name: 'Soya Pulav', items: ['Cooked Rice 150g', 'Chicken 150g / Soya 50g', 'Salad/Mix Vegetables 150g'] },
-    nutrition: { calories: '1800 cal', carbs: '230g', protein: '110g' },
+  // Default meal plan structure (used when no meal plan exists in Firebase)
+  const defaultMealPlan = {
+    nutrition: { calories: 'N/A', carbs: 'N/A', protein: 'N/A' },
+    preWorkout: { option1: 'Not set', option2: '', food: '' },
+    postWorkout: { option1: 'Not set', option2: '' },
+    breakfast: { name: 'Not set', items: [] },
+    snacks: { name: 'Not set', items: [] },
+    lunch: { name: 'Not set', items: [] },
+    dinner: { name: 'Not set', items: [] },
   };
+
+  // Convert Firebase nutrition plan to component format
+  const formattedMealPlan = mealPlan ? {
+    nutrition: {
+      calories: `${mealPlan.dailyCalories || 0} cal`,
+      carbs: `${mealPlan.macros?.carbs || 0}g`,
+      protein: `${mealPlan.macros?.protein || 0}g`,
+    },
+    preWorkout: mealPlan.meals?.find((m: any) => m.name.toLowerCase().includes('pre workout')) || defaultMealPlan.preWorkout,
+    postWorkout: mealPlan.meals?.find((m: any) => m.name.toLowerCase().includes('post workout')) || defaultMealPlan.postWorkout,
+    breakfast: mealPlan.meals?.find((m: any) => m.name.toLowerCase().includes('breakfast')) || defaultMealPlan.breakfast,
+    snacks: mealPlan.meals?.find((m: any) => m.name.toLowerCase().includes('snack')) || defaultMealPlan.snacks,
+    lunch: mealPlan.meals?.find((m: any) => m.name.toLowerCase().includes('lunch')) || defaultMealPlan.lunch,
+    dinner: mealPlan.meals?.find((m: any) => m.name.toLowerCase().includes('dinner')) || defaultMealPlan.dinner,
+  } : defaultMealPlan;
 
   if (loading) {
     return (
@@ -153,10 +260,10 @@ const ClientDashboard: React.FC = () => {
     );
   }
 
-  const startingWeight = 95;
-  const currentWeight = 87.6;
+  const startingWeight = parseFloat(weightEntries[0]?.weight || '0');
+  const currentWeight = parseFloat(weightEntries[weightEntries.length - 1]?.weight || '0');
   const weightLoss = startingWeight - currentWeight;
-  const progressPercentage = ((weightLoss / startingWeight) * 100).toFixed(1);
+  const progressPercentage = startingWeight > 0 ? ((weightLoss / startingWeight) * 100).toFixed(1) : '0.0';
 
   return (
     <>
@@ -267,14 +374,200 @@ const ClientDashboard: React.FC = () => {
       <div className="tab-content">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="overview-grid">
+          <>
+            <div className="overview-charts-container">
+              <div className="measurements-charts-grid">
+              <Card className="mini-chart-card">
+                <h4 className="mini-chart-title">Chest & Shoulders</h4>
+                <div className="mini-chart-container">
+                  <Line 
+                    data={{
+                      labels: bodyMeasurements.map(m => m.week || m.date),
+                      datasets: [
+                        {
+                          label: 'Chest',
+                          data: bodyMeasurements.map(m => m.measurements?.chest || 0),
+                          borderColor: '#ef4444',
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                        {
+                          label: 'Shoulders',
+                          data: bodyMeasurements.map(m => m.measurements?.shoulders || 0),
+                          borderColor: '#3b82f6',
+                          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+                      scales: {
+                        x: { ticks: { font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { font: { size: 9 } }, grid: { color: '#e5e7eb' } },
+                      },
+                    }}
+                  />
+                </div>
+              </Card>
+
+              <Card className="mini-chart-card">
+                <h4 className="mini-chart-title">Arms (Flexed)</h4>
+                <div className="mini-chart-container">
+                  <Line 
+                    data={{
+                      labels: bodyMeasurements.map(m => m.week || m.date),
+                      datasets: [
+                        {
+                          label: 'Left Arm',
+                          data: bodyMeasurements.map(m => m.measurements?.leftArmFlexed || 0),
+                          borderColor: '#10b981',
+                          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                        {
+                          label: 'Right Arm',
+                          data: bodyMeasurements.map(m => m.measurements?.rightArmFlexed || 0),
+                          borderColor: '#06b6d4',
+                          backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+                      scales: {
+                        x: { ticks: { font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { font: { size: 9 } }, grid: { color: '#e5e7eb' } },
+                      },
+                    }}
+                  />
+                </div>
+              </Card>
+
+              <Card className="mini-chart-card">
+                <h4 className="mini-chart-title">Waist & Hips</h4>
+                <div className="mini-chart-container">
+                  <Line 
+                    data={{
+                      labels: bodyMeasurements.map(m => m.week || m.date),
+                      datasets: [
+                        {
+                          label: 'Waist',
+                          data: bodyMeasurements.map(m => m.measurements?.waistMiddle || 0),
+                          borderColor: '#f59e0b',
+                          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                        {
+                          label: 'Hips',
+                          data: bodyMeasurements.map(m => m.measurements?.hips || 0),
+                          borderColor: '#8b5cf6',
+                          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+                      scales: {
+                        x: { ticks: { font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { font: { size: 9 } }, grid: { color: '#e5e7eb' } },
+                      },
+                    }}
+                  />
+                </div>
+              </Card>
+
+              <Card className="mini-chart-card">
+                <h4 className="mini-chart-title">Thighs</h4>
+                <div className="mini-chart-container">
+                  <Line 
+                    data={{
+                      labels: bodyMeasurements.map(m => m.week || m.date),
+                      datasets: [
+                        {
+                          label: 'Left Thigh',
+                          data: bodyMeasurements.map(m => m.measurements?.leftThigh || 0),
+                          borderColor: '#ec4899',
+                          backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                        {
+                          label: 'Right Thigh',
+                          data: bodyMeasurements.map(m => m.measurements?.rightThigh || 0),
+                          borderColor: '#14b8a6',
+                          backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                          borderWidth: 2,
+                          pointRadius: 3,
+                          tension: 0.3,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+                      scales: {
+                        x: { ticks: { font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { font: { size: 9 } }, grid: { color: '#e5e7eb' } },
+                      },
+                    }}
+                  />
+                </div>
+              </Card>
+            </div>
+
             <Card className="weight-chart-card">
-              <h3 className="card-title">Weight Progress</h3>
+              <div className="card-header-with-filter">
+                <h3 className="card-title">Weight Progress</h3>
+                <div className="chart-filter-buttons">
+                  <button 
+                    className={`filter-btn ${weightPeriod === '1month' ? 'active' : ''}`}
+                    onClick={() => setWeightPeriod('1month')}
+                  >
+                    Last Month
+                  </button>
+                  <button 
+                    className={`filter-btn ${weightPeriod === '6months' ? 'active' : ''}`}
+                    onClick={() => setWeightPeriod('6months')}
+                  >
+                    Last 6 Months
+                  </button>
+                  <button 
+                    className={`filter-btn ${weightPeriod === 'all' ? 'active' : ''}`}
+                    onClick={() => setWeightPeriod('all')}
+                  >
+                    All
+                  </button>
+                </div>
+              </div>
               <div className="chart-container">
-                <Bar data={mockWeightData} options={chartOptions} />
+                <Line data={mockWeightData} options={chartOptions} />
               </div>
             </Card>
-          </div>
+            </div>
+          </>
         )}
 
         {/* Weight Tracker Tab */}
@@ -293,62 +586,28 @@ const ClientDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>3/7/2025</td>
-                    <td>95.00</td>
-                    <td className="neutral">0.00</td>
-                    <td><div className="progress-bar" style={{ width: '0%' }}></div></td>
-                  </tr>
-                  <tr>
-                    <td>4</td>
-                    <td>3/10/2025</td>
-                    <td>93.44</td>
-                    <td className="positive">-1.56</td>
-                    <td><div className="progress-bar" style={{ width: '21%' }}></div></td>
-                  </tr>
-                  <tr>
-                    <td>7</td>
-                    <td>3/13/2025</td>
-                    <td>92.44</td>
-                    <td className="positive">-2.56</td>
-                    <td><div className="progress-bar" style={{ width: '35%' }}></div></td>
-                  </tr>
-                  <tr>
-                    <td>9</td>
-                    <td>3/15/2025</td>
-                    <td>90.80</td>
-                    <td className="positive">-4.20</td>
-                    <td><div className="progress-bar" style={{ width: '57%' }}></div></td>
-                  </tr>
-                  <tr>
-                    <td>12</td>
-                    <td>3/18/2025</td>
-                    <td>89.90</td>
-                    <td className="positive">-5.10</td>
-                    <td><div className="progress-bar" style={{ width: '69%' }}></div></td>
-                  </tr>
-                  <tr>
-                    <td>15</td>
-                    <td>3/21/2025</td>
-                    <td>90.00</td>
-                    <td className="positive">-5.00</td>
-                    <td><div className="progress-bar" style={{ width: '68%' }}></div></td>
-                  </tr>
-                  <tr>
-                    <td>29</td>
-                    <td>4/4/2025</td>
-                    <td>88.00</td>
-                    <td className="positive">-7.00</td>
-                    <td><div className="progress-bar" style={{ width: '95%' }}></div></td>
-                  </tr>
-                  <tr className="highlight">
-                    <td>44</td>
-                    <td>4/19/2025</td>
-                    <td>87.60</td>
-                    <td className="positive">-7.40</td>
-                    <td><div className="progress-bar" style={{ width: '100%' }}></div></td>
-                  </tr>
+                  {weightEntries.length > 0 ? (
+                    weightEntries.map((entry, index) => {
+                      const changeClass = entry.change === '0.00' ? 'neutral' : parseFloat(entry.change) < 0 ? 'positive' : 'negative';
+                      const isLatest = index === weightEntries.length - 1;
+                      
+                      return (
+                        <tr key={entry.day} className={isLatest ? 'highlight' : ''}>
+                          <td>{entry.day}</td>
+                          <td>{entry.date}</td>
+                          <td>{entry.weight}</td>
+                          <td className={changeClass}>{entry.change}</td>
+                          <td><div className="progress-bar" style={{ width: `${entry.progress}%` }}></div></td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>
+                        No weight data available
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -357,70 +616,211 @@ const ClientDashboard: React.FC = () => {
 
         {/* Body Measurements Tab */}
         {activeTab === 'measurements' && (
-          <Card>
-            <h3 className="card-title">Body Measurements Progress</h3>
-            <div className="measurements-grid">
-              <div className="measurement-card">
-                <h4>Arms</h4>
-                <div className="measurement-row">
-                  <span>Left Arm:</span>
-                  <span className="measurement-value">13 IN → 13 IN</span>
+          <>
+            {bodyMeasurements.length > 0 ? (
+              <>
+                <Card>
+                  <h3 className="card-title">Body Measurements Progress</h3>
+                  <div className="measurements-grid">
+                    <div className="measurement-card">
+                      <h4>Chest & Shoulders</h4>
+                      <div className="measurement-row">
+                        <span>Chest:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.chest || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.chest || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.chest || 0) - (bodyMeasurements[0].measurements?.chest || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Shoulders:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.shoulders || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.shoulders || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.shoulders || 0) - (bodyMeasurements[0].measurements?.shoulders || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="measurement-card">
+                      <h4>Arms</h4>
+                      <div className="measurement-row">
+                        <span>Left Arm:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.leftArm || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftArm || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftArm || 0) - (bodyMeasurements[0].measurements?.leftArm || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Right Arm:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.rightArm || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightArm || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightArm || 0) - (bodyMeasurements[0].measurements?.rightArm || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Left Arm (Flexed):</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.leftArmFlexed || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftArmFlexed || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftArmFlexed || 0) - (bodyMeasurements[0].measurements?.leftArmFlexed || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Right Arm (Flexed):</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.rightArmFlexed || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightArmFlexed || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightArmFlexed || 0) - (bodyMeasurements[0].measurements?.rightArmFlexed || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="measurement-card">
+                      <h4>Forearms & Neck</h4>
+                      <div className="measurement-row">
+                        <span>Left Forearm:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.leftForearm || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftForearm || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftForearm || 0) - (bodyMeasurements[0].measurements?.leftForearm || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Right Forearm:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.rightForearm || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightForearm || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightForearm || 0) - (bodyMeasurements[0].measurements?.rightForearm || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Neck:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.neck || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.neck || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.neck || 0) - (bodyMeasurements[0].measurements?.neck || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="measurement-card">
+                      <h4>Thighs</h4>
+                      <div className="measurement-row">
+                        <span>Left Thigh:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.leftThigh || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftThigh || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftThigh || 0) - (bodyMeasurements[0].measurements?.leftThigh || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Right Thigh:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.rightThigh || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightThigh || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightThigh || 0) - (bodyMeasurements[0].measurements?.rightThigh || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="measurement-card">
+                      <h4>Core & Lower Body</h4>
+                      <div className="measurement-row">
+                        <span>Waist:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.waistMiddle || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.waistMiddle || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.waistMiddle || 0) - (bodyMeasurements[0].measurements?.waistMiddle || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Hips:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.hips || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.hips || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.hips || 0) - (bodyMeasurements[0].measurements?.hips || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Glutes:</span>
+                        <span className="measurement-value highlight">
+                          {bodyMeasurements[0].measurements?.glutes || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.glutes || 0} IN 
+                          ({((bodyMeasurements[bodyMeasurements.length - 1].measurements?.glutes || 0) - (bodyMeasurements[0].measurements?.glutes || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="measurement-card">
+                      <h4>Calves</h4>
+                      <div className="measurement-row">
+                        <span>Left Calf:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.leftCalf || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftCalf || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.leftCalf || 0) - (bodyMeasurements[0].measurements?.leftCalf || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                      <div className="measurement-row">
+                        <span>Right Calf:</span>
+                        <span className="measurement-value">
+                          {bodyMeasurements[0].measurements?.rightCalf || 0} IN → {bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightCalf || 0} IN 
+                          (+{((bodyMeasurements[bodyMeasurements.length - 1].measurements?.rightCalf || 0) - (bodyMeasurements[0].measurements?.rightCalf || 0)).toFixed(1)})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+                
+                <div className="measurements-table-container">
+                  <h4 className="section-title">Weekly Measurements</h4>
+                  <table className="measurements-table">
+                    <thead>
+                      <tr>
+                        <th>Week</th>
+                        <th>Date</th>
+                        <th>Chest</th>
+                        <th>Shoulders</th>
+                        <th>Left Arm</th>
+                        <th>Right Arm</th>
+                        <th>Left Arm (Flexed)</th>
+                        <th>Right Arm (Flexed)</th>
+                        <th>Left Forearm</th>
+                        <th>Right Forearm</th>
+                        <th>Neck</th>
+                        <th>Left Thigh</th>
+                        <th>Right Thigh</th>
+                        <th>Waist</th>
+                        <th>Hips</th>
+                        <th>Glutes</th>
+                        <th>Left Calf</th>
+                        <th>Right Calf</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bodyMeasurements.map((measurement, index) => (
+                        <tr key={index}>
+                          <td>{measurement.week || `Week ${index + 1}`}</td>
+                          <td>{measurement.date}</td>
+                          <td>{measurement.measurements?.chest || 0} IN</td>
+                          <td>{measurement.measurements?.shoulders || 0} IN</td>
+                          <td>{measurement.measurements?.leftArm || 0} IN</td>
+                          <td>{measurement.measurements?.rightArm || 0} IN</td>
+                          <td>{measurement.measurements?.leftArmFlexed || 0} IN</td>
+                          <td>{measurement.measurements?.rightArmFlexed || 0} IN</td>
+                          <td>{measurement.measurements?.leftForearm || 0} IN</td>
+                          <td>{measurement.measurements?.rightForearm || 0} IN</td>
+                          <td>{measurement.measurements?.neck || 0} IN</td>
+                          <td>{measurement.measurements?.leftThigh || 0} IN</td>
+                          <td>{measurement.measurements?.rightThigh || 0} IN</td>
+                          <td>{measurement.measurements?.waistMiddle || 0} IN</td>
+                          <td>{measurement.measurements?.hips || 0} IN</td>
+                          <td>{measurement.measurements?.glutes || 0} IN</td>
+                          <td>{measurement.measurements?.leftCalf || 0} IN</td>
+                          <td>{measurement.measurements?.rightCalf || 0} IN</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="measurement-row">
-                  <span>Right Arm:</span>
-                  <span className="measurement-value">13 IN → 13 IN</span>
+              </>
+            ) : (
+              <Card>
+                <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                  <h3 style={{ fontSize: '18px', color: '#6b7280', marginBottom: '8px' }}>No measurements available</h3>
+                  <p style={{ fontSize: '14px', color: '#9ca3af' }}>Body measurements have not been recorded yet.</p>
                 </div>
-              </div>
-              <div className="measurement-card">
-                <h4>Thighs</h4>
-                <div className="measurement-row">
-                  <span>Left Thigh:</span>
-                  <span className="measurement-value highlight">24 IN → 22 IN (-2)</span>
-                </div>
-                <div className="measurement-row">
-                  <span>Right Thigh:</span>
-                  <span className="measurement-value highlight">24 IN → 22 IN (-2)</span>
-                </div>
-              </div>
-              <div className="measurement-card">
-                <h4>Waist</h4>
-                <div className="measurement-row">
-                  <span>Waist Middle:</span>
-                  <span className="measurement-value">30 IN → 35 IN</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="measurements-table-container">
-              <h4 className="section-title">Weekly Measurements</h4>
-              <table className="measurements-table">
-                <thead>
-                  <tr>
-                    <th>Week</th>
-                    <th>Date</th>
-                    <th>Left Arm</th>
-                    <th>Right Arm</th>
-                    <th>Left Thigh</th>
-                    <th>Right Thigh</th>
-                    <th>Waist Middle</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bodyMeasurements.map((measurement, index) => (
-                    <tr key={index}>
-                      <td>{measurement.week}</td>
-                      <td>{measurement.date}</td>
-                      <td>{measurement.leftArm} IN</td>
-                      <td>{measurement.rightArm} IN</td>
-                      <td>{measurement.leftThigh} IN</td>
-                      <td>{measurement.rightThigh} IN</td>
-                      <td>{measurement.waistMiddle} IN</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+              </Card>
+            )}
+          </>
         )}
 
         {/* Meal Plan Tab */}
@@ -431,27 +831,27 @@ const ClientDashboard: React.FC = () => {
             <div className="nutrition-cards-container">
               <Card className="nutrition-stat-card">
                 <div className="nutrition-stat">
-                  <div className="stat-value">{mealPlan.nutrition.calories}</div>
+                  <div className="stat-value">{formattedMealPlan.nutrition.calories}</div>
                   <div className="stat-label">Calories</div>
                 </div>
               </Card>
 
               <Card className="nutrition-stat-card">
                 <div className="nutrition-stat">
-                  <div className="stat-value">{mealPlan.nutrition.carbs}</div>
+                  <div className="stat-value">{formattedMealPlan.nutrition.carbs}</div>
                   <div className="stat-label">Carbs</div>
                 </div>
               </Card>
 
               <Card className="nutrition-stat-card">
                 <div className="nutrition-stat">
-                  <div className="stat-value">{mealPlan.nutrition.protein}</div>
+                  <div className="stat-value">{formattedMealPlan.nutrition.protein}</div>
                   <div className="stat-label">Protein</div>
                 </div>
               </Card>
             </div>
 
-            <h3 className="card-title">Daily Nutrition Target</h3>
+            <h3 className="card-title">Daily Meal Plan</h3>
 
             <div className="meal-plan-grid">
             <Card className="meal-card">
@@ -460,8 +860,9 @@ const ClientDashboard: React.FC = () => {
                 <span className="meal-time">6:00 AM</span>
               </h4>
               <ul className="meal-list">
-                <li>{mealPlan.preWorkout.option1}</li>
-                <li>{mealPlan.preWorkout.food}</li>
+                {formattedMealPlan.preWorkout.option1 && <li>{formattedMealPlan.preWorkout.option1}</li>}
+                {formattedMealPlan.preWorkout.food && <li>{formattedMealPlan.preWorkout.food}</li>}
+                {!formattedMealPlan.preWorkout.option1 && !formattedMealPlan.preWorkout.food && <li>No meal plan set</li>}
               </ul>
             </Card>
 
@@ -471,8 +872,9 @@ const ClientDashboard: React.FC = () => {
                 <span className="meal-time">8:00 AM</span>
               </h4>
               <ul className="meal-list">
-                <li>{mealPlan.postWorkout.option1}</li>
-                <li>{mealPlan.postWorkout.option2}</li>
+                {formattedMealPlan.postWorkout.option1 && <li>{formattedMealPlan.postWorkout.option1}</li>}
+                {formattedMealPlan.postWorkout.option2 && <li>{formattedMealPlan.postWorkout.option2}</li>}
+                {!formattedMealPlan.postWorkout.option1 && !formattedMealPlan.postWorkout.option2 && <li>No meal plan set</li>}
               </ul>
             </Card>
 
@@ -481,11 +883,15 @@ const ClientDashboard: React.FC = () => {
                 <span>Breakfast</span>
                 <span className="meal-time">9:00 AM</span>
               </h4>
-              <p className="meal-name">{mealPlan.breakfast.name}</p>
+              {formattedMealPlan.breakfast.name && <p className="meal-name">{formattedMealPlan.breakfast.name}</p>}
               <ul className="meal-list">
-                {mealPlan.breakfast.items.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
+                {formattedMealPlan.breakfast.items && formattedMealPlan.breakfast.items.length > 0 ? (
+                  formattedMealPlan.breakfast.items.map((item: string, index: number) => (
+                    <li key={index}>{item}</li>
+                  ))
+                ) : (
+                  <li>No meal plan set</li>
+                )}
               </ul>
             </Card>
 
@@ -494,11 +900,15 @@ const ClientDashboard: React.FC = () => {
                 <span>Snacks</span>
                 <span className="meal-time">12:00 PM</span>
               </h4>
-              <p className="meal-name">{mealPlan.snacks.name}</p>
+              {formattedMealPlan.snacks.name && <p className="meal-name">{formattedMealPlan.snacks.name}</p>}
               <ul className="meal-list">
-                {mealPlan.snacks.items.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
+                {formattedMealPlan.snacks.items && formattedMealPlan.snacks.items.length > 0 ? (
+                  formattedMealPlan.snacks.items.map((item: string, index: number) => (
+                    <li key={index}>{item}</li>
+                  ))
+                ) : (
+                  <li>No meal plan set</li>
+                )}
               </ul>
             </Card>
 
@@ -507,11 +917,15 @@ const ClientDashboard: React.FC = () => {
                 <span>Lunch</span>
                 <span className="meal-time">2:00 PM</span>
               </h4>
-              <p className="meal-name">{mealPlan.lunch.name}</p>
+              {formattedMealPlan.lunch.name && <p className="meal-name">{formattedMealPlan.lunch.name}</p>}
               <ul className="meal-list">
-                {mealPlan.lunch.items.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
+                {formattedMealPlan.lunch.items && formattedMealPlan.lunch.items.length > 0 ? (
+                  formattedMealPlan.lunch.items.map((item: string, index: number) => (
+                    <li key={index}>{item}</li>
+                  ))
+                ) : (
+                  <li>No meal plan set</li>
+                )}
               </ul>
             </Card>
 
@@ -520,11 +934,15 @@ const ClientDashboard: React.FC = () => {
                 <span>Dinner</span>
                 <span className="meal-time">7:00 PM</span>
               </h4>
-              <p className="meal-name">{mealPlan.dinner.name}</p>
+              {formattedMealPlan.dinner.name && <p className="meal-name">{formattedMealPlan.dinner.name}</p>}
               <ul className="meal-list">
-                {mealPlan.dinner.items.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
+                {formattedMealPlan.dinner.items && formattedMealPlan.dinner.items.length > 0 ? (
+                  formattedMealPlan.dinner.items.map((item: string, index: number) => (
+                    <li key={index}>{item}</li>
+                  ))
+                ) : (
+                  <li>No meal plan set</li>
+                )}
               </ul>
             </Card>
           </div>

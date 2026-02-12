@@ -27,7 +27,8 @@
     "seed:coaches": "node scripts/seed-coaches.js",
     "verify:coaches": "node scripts/verify-coaches.js",
     "seed:clients": "node scripts/seed-clients.js",
-    "verify:clients": "node scripts/verify-clients.js"
+    "verify:clients": "node scripts/verify-clients.js",
+    "seed:client-data": "node scripts/seed-client-data.js"
   },
   "eslintConfig": {
     "extends": [

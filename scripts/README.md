@@ -1,147 +1,121 @@
-# Seed Coach and Client Profiles Script
+# Client Data Seeding
 
-This directory contains scripts to seed your Firestore database with realistic mock data.
+This script seeds Firebase with sample client progress data including:
+- Body measurements (chest, shoulders, arms, thighs, waist, hips, etc.)
+- Weight tracking data (39 weeks of realistic weight loss progression)
+- Nutrition plans with meal breakdowns
 
-## Available Scripts
+## Setup
 
-### Coach Profiles
-- **seed-coaches.js** - Creates 4 mock coach profiles
-- **verify-coaches.js** - Verifies coaches in database
+1. Make sure your Firebase configuration is set up in your `.env` file:
+   ```
+   REACT_APP_FIREBASE_API_KEY=your_api_key
+   REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+   REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   REACT_APP_FIREBASE_APP_ID=your_app_id
+   ```
 
-### Client Profiles  
-- **seed-clients.js** - Creates 50 mock client profiles (requires coaches)
-- **verify-clients.js** - Verifies clients in database
+2. Install dependencies (if not already installed):
+   ```bash
+   npm install
+   ```
 
-## Mock Data Created
+## Running the Script
 
-### Coaches (4 total)
-
-1. **Sarah Johnson** - Strength Training & Nutrition Specialist
-   - 8+ years experience
-   - CSCS certified, Precision Nutrition Level 1
-   - 12 clients, $24.5k revenue, 4.8★ rating
-
-2. **Michael Chen** - Functional Training & Sports Performance
-   - Former competitive athlete
-   - CPT, FMS, Sports Performance Specialist
-   - 18 clients, $36.2k revenue, 4.9★ rating
-
-3. **Emily Rodriguez** - Yoga & Wellness Coach
-   - Mind-body connection specialist
-   - RYT-500, Certified Health Coach
-   - 15 clients, $18.75k revenue, 5.0★ rating
-
-4. **David Thompson** - CrossFit & Endurance Specialist
-   - CrossFit Level 2, USA Weightlifting Level 1
-   - HIIT and Olympic lifting expert
-   - 20 clients, $42k revenue, 4.7★ rating
-
-### Clients (50 total)
-
-- **Distribution**: 12-13 clients per coach (evenly distributed)
-- **Status**: ~40 active (80%), ~10 paused (20%)
-- **Plans**: Mix of basic ($29), standard ($79), premium ($149)
-- **Goals**: Weight loss, muscle gain, endurance, flexibility, general fitness
-- **Features**: Complete profiles with personal info, fitness goals, medical history, and metrics
-
-## Setup Instructions
-
-### 1. Install Dependencies
+To seed data for all existing clients in your Firebase:
 
 ```bash
-npm install firebase-admin dotenv --save-dev
+npx ts-node scripts/seedClientData.ts
 ```
 
-### 2. Get Firebase Service Account Key
+Or if you have ts-node globally installed:
 
-1. Go to Firebase Console: https://console.firebase.google.com
-2. Select your project
-3. Go to Project Settings (gear icon) > Service Accounts
-4. Click "Generate New Private Key"
-5. Save the downloaded JSON file as `scripts/serviceAccountKey.json`
-
-### 3. Create .env File (if not exists)
-
-Make sure you have a `.env` file in the root directory with your Firebase configuration:
-
-```env
-REACT_APP_FIREBASE_API_KEY=your_api_key_here
-REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain_here
-REACT_APP_FIREBASE_PROJECT_ID=your_project_id_here
-REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
-REACT_APP_FIREBASE_APP_ID=your_app_id_here
-REACT_APP_FIREBASE_MEASUREMENT_ID=your_measurement_id_here
-```
-
-### 4. Run the Seeding Scripts
-
-**Step 1: Seed Coaches (do this first)**
 ```bash
-npm run seed:coaches
+ts-node scripts/seedClientData.ts
 ```
 
-**Step 2: Seed Clients (requires coaches)**
+Alternatively, you can compile and run it:
+
 ```bash
-npm run seed:clients
+npx tsc scripts/seedClientData.ts
+node scripts/seedClientData.js
 ```
-
-### 5. Verify the Upload (Optional)
-
-Verify coaches:
-```bash
-npm run verify:coaches
-```
-
-Verify clients:
-```bash
-npm run verify:clients
-```
-
-These commands will display all profiles in your Firestore database with details and statistics.
 
 ## What Gets Created
 
-Each coach profile includes:
-- ✅ Personal information (name, email, phone, bio)
-- ✅ Certifications with issue/expiry dates
-- ✅ Specializations
-- ✅ Weekly availability schedule
-- ✅ Commission rate
-- ✅ Status set to "verified" (ready to be assigned)
-- ✅ Metrics (client count, revenue, sessions, rating)
-- ✅ Timestamps (createdAt, updatedAt)
+For each client in the `client_profiles` collection, the script creates:
 
-## Important Notes
+### 1. Client Progress Data (`client_progress` collection)
+- **Document ID**: matches client ID
+- **Weight Entries**: 39 weeks of weight tracking data with:
+  - Weekly weight measurements
+  - Change from starting weight
+  - Progress percentage
+  - Date stamps
 
-- All coaches are created with status "verified" so they can be immediately assigned to clients
-- Each coach has unique availability schedules
-- Realistic metrics are included for dashboard testing
-- The service account key should NEVER be committed to version control
-- Add `serviceAccountKey.json` to your `.gitignore` file
+- **Body Measurements**: 4 milestone measurements (Week 1, 13, 26, 39) including:
+  - Chest, shoulders
+  - Arms (flexed and unflexed)
+  - Forearms
+  - Neck
+  - Thighs (left and right)
+  - Waist, hips, glutes
+  - Calves (left and right)
 
-## Firestore Collection
+### 2. Nutrition Plans (`nutrition_plans` collection)
+- **Document ID**: matches client ID
+- **Current Plan**: Active nutrition plan reference
+- **Meal Plans**: Complete daily meal breakdown with:
+  - Pre-workout meal
+  - Post-workout meal
+  - Breakfast
+  - Snacks
+  - Lunch
+  - Dinner
+- **Macros**: Daily calorie and macro targets (protein, carbs, fats)
 
-The coaches are added to: `coach_profiles`
+## Customizing the Data
 
-## Security
+You can modify the seed data in `seedClientData.ts`:
 
-⚠️ **IMPORTANT**: Add this to your `.gitignore`:
+- **Weight Data**: Adjust `generateWeightData()` parameters:
+  - Starting weight (default: 95 kg)
+  - Target weight (default: 80 kg)
+  - Number of weeks (default: 39)
+
+- **Body Measurements**: Edit the `generateBodyMeasurements()` function to change measurement values
+
+- **Nutrition Plan**: Modify `createSampleNutritionPlan()` to adjust:
+  - Daily calorie targets
+  - Macro ratios
+  - Meal items and portions
+
+## Firebase Collections Structure
 
 ```
-scripts/serviceAccountKey.json
+Firestore
+├── client_profiles/
+│   └── {clientId}/
+├── client_progress/
+│   └── {clientId}/
+│       ├── measurements[]
+│       ├── weightEntries[]
+│       ├── milestones[]
+│       ├── lastUpdated
+│       └── createdAt
+└── nutrition_plans/
+    └── {clientId}/
+        ├── currentPlan
+        ├── plans[]
+        ├── createdAt
+        └── updatedAt
 ```
 
-## Troubleshooting
+## Notes
 
-### "Cannot find module 'firebase-admin'"
-Run: `npm install firebase-admin --save-dev`
-
-### "ENOENT: no such file or directory, open './serviceAccountKey.json'"
-Make sure you downloaded the service account key and placed it in the `scripts/` folder
-
-### "Permission denied" or "403 Forbidden"
-Check that your service account has the necessary permissions in Firebase Console
-
-### "Collection doesn't exist"
-The collection will be created automatically when the first document is added
+- The script will only seed data for clients that already exist in the `client_profiles` collection
+- Running the script multiple times will **overwrite** existing progress and nutrition data
+- Make sure you have write permissions to your Firebase project
+- The generated data is realistic but simulated for demonstration purposes
