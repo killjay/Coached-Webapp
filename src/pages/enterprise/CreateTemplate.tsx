@@ -132,11 +132,6 @@ const CreateTemplate: React.FC = () => {
                     {template.status}
                   </span>
                 </div>
-                <p className="template-card-description">{template.description}</p>
-                <div className="template-card-meta">
-                  <span>Duration: {template.duration} weeks</span>
-                  <span>Difficulty: {template.difficulty}</span>
-                </div>
                 {template.tags && template.tags.length > 0 && (
                   <div className="template-tags">
                     {template.tags.map((tag, idx) => (
@@ -144,6 +139,24 @@ const CreateTemplate: React.FC = () => {
                     ))}
                   </div>
                 )}
+                <p className="template-card-description">{template.description}</p>
+                <div className="template-card-meta">
+                  <span>Duration: {template.duration} weeks</span>
+                  <span>Difficulty: {template.difficulty}</span>
+                </div>
+                <div className="template-card-date">
+                  {template.updatedAt && (
+                    <span>
+                      {viewMode === 'published' ? 'Published' : 'Saved'}: {new Date(template.updatedAt.seconds * 1000).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  )}
+                </div>
                 <div className="template-card-actions">
                   <Button variant="secondary" size="small" onClick={() => handleEdit(template.id)}>
                     Edit
