@@ -190,9 +190,6 @@
   white-space: nowrap;
 }
 
-.tab:hover {
-  color: #4f7cff;
-}
 
 .tab.active {
   color: rgba(0, 0, 0, 1);
@@ -385,9 +382,6 @@
   background-color: rgba(255, 255, 255, 1);
 }
 
-.weight-table tbody tr:hover {
-  background: #f9fafb;
-}
 
 .weight-table tbody tr.highlight {
   background: #eff6ff;
@@ -523,9 +517,6 @@
   box-shadow: 6px 0 12px rgba(0, 0, 0, 0.25);
 }
 
-.measurements-table tbody tr:hover td:first-child {
-  background-color: #f9fafb;
-}
 
 /* Meal Plan */
 .nutrition-cards-container {
@@ -710,10 +701,6 @@
   white-space: nowrap;
 }
 
-.filter-btn:hover {
-  background: #ffffff;
-  color: #1a1d2e;
-}
 
 .filter-btn.active {
   background: #3b82f6;

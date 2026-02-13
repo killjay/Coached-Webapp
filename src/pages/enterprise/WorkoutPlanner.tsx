@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   addDoc,
   collection,
@@ -78,6 +78,7 @@ const WorkoutPlanner: React.FC = () => {
   const { user } = useAuth();
   const coachId = user?.uid || '';
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Step state
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -196,6 +197,15 @@ const WorkoutPlanner: React.FC = () => {
     const nextSchedule = content?.schedule ? { ...emptySchedule(), ...content.schedule } : emptySchedule();
     setSchedule(nextSchedule);
   }, [selectedTemplate]);
+
+  // Load template from URL parameter
+  useEffect(() => {
+    const templateId = searchParams.get('templateId');
+    if (templateId && templates.length > 0) {
+      setSelectedTemplateId(templateId);
+      setCurrentStep(2);
+    }
+  }, [searchParams, templates]);
 
   const templateTagList = useMemo(() => {
     return tags
@@ -665,23 +675,21 @@ const WorkoutPlanner: React.FC = () => {
                             <div key={ex.id} className="exercise-item" style={{ position: 'relative' }}>
                               <button
                                 onClick={() => removeExercise(day, ex.id)}
-                                style={{
-                                  position: 'absolute',
-                                  top: '8px',
-                                  right: '8px',
-                                  background: 'transparent',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  padding: '4px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  color: '#9ca3af',
-                                  transition: 'color 0.2s',
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
-                                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
-                              >
+                              style={{
+                                position: 'absolute',
+                                top: '8px',
+                                right: '8px',
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#9ca3af',
+                                transition: 'color 0.2s',
+                              }}
+                            >
                                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                   <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>

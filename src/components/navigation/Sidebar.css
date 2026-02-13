@@ -118,11 +118,6 @@
   right: -10px;
 }
 
-.collapse-button:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: #d1d5db;
-  color: #1a1d2e;
-}
 
 .collapse-button svg {
   width: 14px;
@@ -157,10 +152,6 @@
   white-space: nowrap;
 }
 
-.nav-item:hover {
-  background: #f9fafb;
-  color: #1a1d2e;
-}
 
 .nav-item.active {
   background: #161616;
@@ -342,11 +333,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-.logout-button:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  color: #1a1d2e;
-}
 
 .logout-button svg {
   width: 18px;
@@ -446,6 +432,3 @@
   border-radius: 4px;
 }
 
-.sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}

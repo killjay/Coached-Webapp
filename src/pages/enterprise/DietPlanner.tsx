@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   addDoc,
   collection,
@@ -23,10 +23,10 @@ import './DietPlanner.css';
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 type TemplateStatus = 'draft' | 'published';
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+type MealType = 'breakfast' | 'morning-snack' | 'lunch' | 'evening-snack' | 'dinner';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
-const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snacks'];
+const MEAL_TYPES: MealType[] = ['breakfast', 'morning-snack', 'lunch', 'evening-snack', 'dinner'];
 
 function safeId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -35,9 +35,10 @@ function safeId() {
 
 const emptyDayMeals = (): DayMeals => ({
   breakfast: [],
+  'morning-snack': [],
   lunch: [],
+  'evening-snack': [],
   dinner: [],
-  snacks: [],
 });
 
 const emptyMeals = (): NutritionPlan['meals'] =>
@@ -50,6 +51,7 @@ const DietPlanner: React.FC = () => {
   const { user } = useAuth();
   const coachId = user?.uid || '';
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [fieldErrors, setFieldErrors] = useState({
@@ -98,6 +100,7 @@ const DietPlanner: React.FC = () => {
   });
 
   const [ingredientInput, setIngredientInput] = useState('');
+  const [ingredientWeight, setIngredientWeight] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -176,6 +179,15 @@ const DietPlanner: React.FC = () => {
     }
   }, [selectedTemplate]);
 
+  // Load template from URL parameter
+  useEffect(() => {
+    const templateId = searchParams.get('templateId');
+    if (templateId && templates.length > 0) {
+      setSelectedTemplateId(templateId);
+      setCurrentStep(2);
+    }
+  }, [searchParams, templates]);
+
   const templateTagList = useMemo(() => {
     return tags
       .split(',')
@@ -214,9 +226,10 @@ const DietPlanner: React.FC = () => {
       (sum, dayMeals) =>
         sum +
         (dayMeals?.breakfast?.length || 0) +
+        (dayMeals?.['morning-snack']?.length || 0) +
         (dayMeals?.lunch?.length || 0) +
-        (dayMeals?.dinner?.length || 0) +
-        (dayMeals?.snacks?.length || 0),
+        (dayMeals?.['evening-snack']?.length || 0) +
+        (dayMeals?.dinner?.length || 0),
       0
     );
     if (totalMeals === 0) return 'Add at least one meal to the plan.';
@@ -227,11 +240,15 @@ const DietPlanner: React.FC = () => {
     const ingredient = ingredientInput.trim();
     if (!ingredient) return;
     
+    const weight = ingredientWeight.trim();
+    const ingredientText = weight ? `${ingredient} (${weight}g)` : ingredient;
+    
     setMealDraft((prev) => ({
       ...prev,
-      ingredients: [...(prev.ingredients || []), ingredient],
+      ingredients: [...(prev.ingredients || []), ingredientText],
     }));
     setIngredientInput('');
+    setIngredientWeight('');
   };
 
   const removeIngredient = (index: number) => {
@@ -574,7 +591,16 @@ const DietPlanner: React.FC = () => {
                     />
                     <Select
                       label="Meal Type"
-                      options={MEAL_TYPES.map((m) => ({ value: m, label: m.charAt(0).toUpperCase() + m.slice(1) }))}
+                      options={MEAL_TYPES.map((m) => {
+                        const labels: Record<MealType, string> = {
+                          'breakfast': 'Breakfast',
+                          'morning-snack': 'Morning Snack',
+                          'lunch': 'Lunch',
+                          'evening-snack': 'Evening Snack',
+                          'dinner': 'Dinner'
+                        };
+                        return { value: m, label: labels[m] };
+                      })}
                       value={selectedMealType}
                       onChange={(e) => setSelectedMealType(e.target.value as MealType)}
                     />
@@ -617,9 +643,10 @@ const DietPlanner: React.FC = () => {
                     const dayMeals = meals[day] || emptyDayMeals();
                     const totalMeals =
                       (dayMeals.breakfast?.length || 0) +
+                      (dayMeals['morning-snack']?.length || 0) +
                       (dayMeals.lunch?.length || 0) +
-                      (dayMeals.dinner?.length || 0) +
-                      (dayMeals.snacks?.length || 0);
+                      (dayMeals['evening-snack']?.length || 0) +
+                      (dayMeals.dinner?.length || 0);
 
                     return (
                       <div key={day} className={`day-block ${isExpanded ? 'expanded' : ''}`}>
@@ -648,6 +675,33 @@ const DietPlanner: React.FC = () => {
                             <path d="M6 8L10 12L14 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(4, 1fr)', 
+                          gap: '8px', 
+                          marginTop: '12px',
+                          padding: '8px',
+                          background: '#f9fafb',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}>
+                          <div>
+                            <div style={{ color: '#6b7280', marginBottom: '2px' }}>Protein</div>
+                            <div style={{ fontWeight: 600, color: '#111827' }}>{macroTargets.protein}g</div>
+                          </div>
+                          <div>
+                            <div style={{ color: '#6b7280', marginBottom: '2px' }}>Carbs</div>
+                            <div style={{ fontWeight: 600, color: '#111827' }}>{macroTargets.carbs}g</div>
+                          </div>
+                          <div>
+                            <div style={{ color: '#6b7280', marginBottom: '2px' }}>Fats</div>
+                            <div style={{ fontWeight: 600, color: '#111827' }}>{macroTargets.fats}g</div>
+                          </div>
+                          <div>
+                            <div style={{ color: '#6b7280', marginBottom: '2px' }}>Calories</div>
+                            <div style={{ fontWeight: 600, color: '#111827' }}>{macroTargets.calories}</div>
+                          </div>
+                        </div>
                         {isExpanded && (
                           <div className="meal-sections">
                             {MEAL_TYPES.map((mealType) => {
@@ -657,7 +711,16 @@ const DietPlanner: React.FC = () => {
                               return (
                                 <div key={mealType} className="meal-section">
                                   <div className="meal-section-title">
-                                    {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                                    {(() => {
+                                      const labels: Record<MealType, string> = {
+                                        'breakfast': 'Breakfast',
+                                        'morning-snack': 'Morning Snack',
+                                        'lunch': 'Lunch',
+                                        'evening-snack': 'Evening Snack',
+                                        'dinner': 'Dinner'
+                                      };
+                                      return labels[mealType];
+                                    })()}
                                   </div>
                                   <div className="meal-list">
                                     {mealList.map((meal) => (
@@ -678,21 +741,18 @@ const DietPlanner: React.FC = () => {
                                             color: '#9ca3af',
                                             transition: 'color 0.2s',
                                           }}
-                                          onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
-                                          onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
                                         >
                                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                           </svg>
                                         </button>
                                         <div className="meal-name">{meal.name}</div>
-                                        <div className="meal-meta">
-                                          {meal.macros.calories} cal • P: {meal.macros.protein}g • C: {meal.macros.carbs}g • F: {meal.macros.fats}g
-                                        </div>
                                         {meal.ingredients.length > 0 && (
-                                          <div className="meal-ingredients">
-                                            {meal.ingredients.join(', ')}
-                                          </div>
+                                          <ol className="meal-ingredients">
+                                            {meal.ingredients.map((ingredient, idx) => (
+                                              <li key={idx}>{ingredient}</li>
+                                            ))}
+                                          </ol>
                                         )}
                                       </div>
                                     ))}
@@ -731,6 +791,19 @@ const DietPlanner: React.FC = () => {
                             }
                           }}
                         />
+                        <Input
+                          type="number"
+                          value={ingredientWeight}
+                          onChange={(e) => setIngredientWeight(e.target.value)}
+                          placeholder="Weight (g)"
+                          style={{ width: '120px' }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addIngredient();
+                            }
+                          }}
+                        />
                         <Button variant="secondary" onClick={addIngredient}>
                           Add
                         </Button>
@@ -745,33 +818,6 @@ const DietPlanner: React.FC = () => {
                           ))}
                         </div>
                       )}
-                    </div>
-
-                    <div className="macro-grid" style={{ marginTop: 10 }}>
-                      <Input
-                        label="Protein (g)"
-                        type="number"
-                        value={String(mealDraft.macros?.protein ?? 0)}
-                        onChange={(e) => setMealDraft((p) => ({ ...p, macros: { ...p.macros!, protein: Number(e.target.value) } }))}
-                      />
-                      <Input
-                        label="Carbs (g)"
-                        type="number"
-                        value={String(mealDraft.macros?.carbs ?? 0)}
-                        onChange={(e) => setMealDraft((p) => ({ ...p, macros: { ...p.macros!, carbs: Number(e.target.value) } }))}
-                      />
-                      <Input
-                        label="Fats (g)"
-                        type="number"
-                        value={String(mealDraft.macros?.fats ?? 0)}
-                        onChange={(e) => setMealDraft((p) => ({ ...p, macros: { ...p.macros!, fats: Number(e.target.value) } }))}
-                      />
-                      <Input
-                        label="Calories"
-                        type="number"
-                        value={String(mealDraft.macros?.calories ?? 0)}
-                        onChange={(e) => setMealDraft((p) => ({ ...p, macros: { ...p.macros!, calories: Number(e.target.value) } }))}
-                      />
                     </div>
 
                     <div style={{ marginTop: 10 }}>
@@ -791,7 +837,16 @@ const DietPlanner: React.FC = () => {
 
                     <div className="meal-builder-actions">
                       <Button variant="primary" onClick={addMealToDay}>
-                        Add to {selectedDay} - {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)}
+                        Add to {selectedDay} - {(() => {
+                          const labels: Record<MealType, string> = {
+                            'breakfast': 'Breakfast',
+                            'morning-snack': 'Morning Snack',
+                            'lunch': 'Lunch',
+                            'evening-snack': 'Evening Snack',
+                            'dinner': 'Dinner'
+                          };
+                          return labels[selectedMealType];
+                        })()}
                       </Button>
                     </div>
                   </div>

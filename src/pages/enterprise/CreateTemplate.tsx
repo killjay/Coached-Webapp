@@ -1,23 +1,92 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
 import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import EmptyState from '../../components/common/EmptyState';
+import { db } from '../../firebase/config';
+import { useAuth } from '../../context/AuthContext';
+import { Template } from '../../types';
 import './CreateTemplate.css';
 
 const CreateTemplate: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'workout' | 'nutrition'>('workout');
+  const [viewMode, setViewMode] = useState<'published' | 'drafts'>('published');
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const coachId = user?.uid || '';
+
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!coachId) return;
+
+    const templateType = activeTab === 'workout' ? 'workout' : 'nutrition';
+    const q = query(
+      collection(db, 'templates'),
+      where('coachId', '==', coachId),
+      where('type', '==', templateType),
+      where('status', '==', viewMode === 'published' ? 'published' : 'draft')
+    );
+
+    setLoading(true);
+    setError(null);
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as Template[];
+        setTemplates(list);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Failed to load templates', err);
+        setError('Failed to load templates. Please refresh and try again.');
+        setLoading(false);
+      }
+    );
+
+    return () => unsub();
+  }, [coachId, activeTab, viewMode]);
+
+  const handleEdit = (templateId: string) => {
+    const route = activeTab === 'workout' ? '/enterprise/workout-planner' : '/enterprise/diet-planner';
+    navigate(`${route}?templateId=${templateId}`);
+  };
+
+  const handleDelete = async (templateId: string) => {
+    if (!window.confirm('Delete this template? This cannot be undone.')) return;
+    try {
+      await deleteDoc(doc(db, 'templates', templateId));
+    } catch (err) {
+      console.error('Failed to delete template', err);
+      alert('Failed to delete template.');
+    }
+  };
 
   return (
     <div className="create-template-page">
       <div className="page-header">
         <h1 className="page-title">Templates</h1>
-        <Button 
-          variant="secondary" 
-          size="medium" 
-          onClick={() => navigate(activeTab === 'workout' ? '/enterprise/workout-planner' : '/enterprise/diet-planner')}
-        >
-          {activeTab === 'workout' ? '+ New Workout Template' : '+ New Diet Template'}
-        </Button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Button 
+            variant="secondary" 
+            size="medium" 
+            onClick={() => setViewMode(viewMode === 'published' ? 'drafts' : 'published')}
+          >
+            {viewMode === 'published' ? 'View Drafts' : 'View Published'}
+          </Button>
+          <Button 
+            variant="secondary" 
+            size="medium" 
+            onClick={() => navigate(activeTab === 'workout' ? '/enterprise/workout-planner' : '/enterprise/diet-planner')}
+            className="btn-new-template"
+          >
+            {activeTab === 'workout' ? '+ New Workout Template' : '+ New Diet Template'}
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -38,6 +107,55 @@ const CreateTemplate: React.FC = () => {
 
       {/* Tab Content */}
       <div className="tab-content">
+        {loading && <div style={{ textAlign: 'center', padding: '40px' }}>Loading templates...</div>}
+        
+        {error && <div style={{ color: '#dc2626', padding: '20px' }}>{error}</div>}
+        
+        {!loading && !error && templates.length === 0 && (
+          <EmptyState
+            title={`No ${viewMode === 'published' ? 'Published' : 'Draft'} Templates`}
+            description={`You haven't created any ${viewMode === 'published' ? 'published' : 'draft'} ${activeTab} templates yet.`}
+            action={{
+              label: `Create ${activeTab === 'workout' ? 'Workout' : 'Diet'} Template`,
+              onClick: () => navigate(activeTab === 'workout' ? '/enterprise/workout-planner' : '/enterprise/diet-planner')
+            }}
+          />
+        )}
+
+        {!loading && !error && templates.length > 0 && (
+          <div className="templates-grid">
+            {templates.map((template) => (
+              <Card key={template.id} className="template-card">
+                <div className="template-card-header">
+                  <h3 className="template-card-title">{template.name}</h3>
+                  <span className={`status-badge status-${template.status}`}>
+                    {template.status}
+                  </span>
+                </div>
+                <p className="template-card-description">{template.description}</p>
+                <div className="template-card-meta">
+                  <span>Duration: {template.duration} weeks</span>
+                  <span>Difficulty: {template.difficulty}</span>
+                </div>
+                {template.tags && template.tags.length > 0 && (
+                  <div className="template-tags">
+                    {template.tags.map((tag, idx) => (
+                      <span key={idx} className="template-tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <div className="template-card-actions">
+                  <Button variant="secondary" size="small" onClick={() => handleEdit(template.id)}>
+                    Edit
+                  </Button>
+                  <Button variant="danger" size="small" onClick={() => handleDelete(template.id)}>
+                    Delete
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

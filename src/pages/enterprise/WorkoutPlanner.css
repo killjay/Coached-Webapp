@@ -30,9 +30,6 @@
   text-align: left;
 }
 
-.template-item:hover {
-  border-color: rgba(79, 124, 255, 0.6);
-}
 
 .template-item.active {
   border-color: #4f7cff;
@@ -326,8 +323,4 @@
   color: #000000;
 }
 
-.btn-save-drafts.btn.btn-secondary:hover:not(:disabled) {
-  border-color: #000000;
-  color: #000000;
-}
 

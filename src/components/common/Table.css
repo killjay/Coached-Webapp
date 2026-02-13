@@ -38,9 +38,6 @@
   border-bottom: none;
 }
 
-.table-row:hover {
-  background: #f9fafb;
-}
 
 .table-row-clickable {
   cursor: pointer;

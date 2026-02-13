@@ -252,9 +252,6 @@
   transition: color 0.2s ease;
 }
 
-.forgot-link:hover {
-  color: #3d63d9;
-}
 
 .login-button {
   width: 100%;
@@ -274,10 +271,6 @@
   box-shadow: 0 4px 12px rgba(79, 124, 255, 0.3);
 }
 
-.login-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 124, 255, 0.4);
-}
 
 .login-button:active:not(:disabled) {
   transform: translateY(0);
@@ -327,9 +320,6 @@
   font-size: inherit;
 }
 
-.signup-link:hover {
-  color: #3d63d9;
-}
 
 .error-message {
   background: #fee;
@@ -395,11 +385,6 @@
   height: 20px;
 }
 
-.social-button:hover {
-  border-color: #d1d5db;
-  background: #f9fafb;
-  transform: translateY(-1px);
-}
 
 .social-button:active {
   transform: translateY(0);

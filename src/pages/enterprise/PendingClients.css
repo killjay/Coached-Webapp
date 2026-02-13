@@ -67,9 +67,6 @@
   color: #333;
 }
 
-.clients-table tbody tr:hover {
-  background-color: #f8f9ff;
-}
 
 .plan-badge {
   display: inline-block;
@@ -136,10 +133,6 @@
   transition: all 0.2s;
 }
 
-.close-button:hover {
-  background-color: #f0f0f0;
-  color: #333;
-}
 
 .modal-body {
   padding: 24px;

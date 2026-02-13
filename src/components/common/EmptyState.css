@@ -52,10 +52,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-.empty-state-action:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 124, 255, 0.3);
-}
 
 @media (max-width: 640px) {
   .empty-state {

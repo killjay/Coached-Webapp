@@ -15,10 +15,6 @@
   transition: all 0.2s ease;
 }
 
-.metric-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
 
 .metric-icon {
   width: 48px;

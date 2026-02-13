@@ -380,9 +380,10 @@ export interface NutritionPlan {
 
 export interface DayMeals {
   breakfast: TemplateMeal[];
+  'morning-snack': TemplateMeal[];
   lunch: TemplateMeal[];
+  'evening-snack': TemplateMeal[];
   dinner: TemplateMeal[];
-  snacks: TemplateMeal[];
 }
 
 export interface TemplateMeal {
