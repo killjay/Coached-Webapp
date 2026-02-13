@@ -95,7 +95,7 @@ const Sidebar: React.FC = () => {
     },
     {
       id: 'templates',
-      label: 'Create Template',
+      label: 'Templates',
       path: '/enterprise/templates',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -141,6 +141,29 @@ const Sidebar: React.FC = () => {
           />
           <path
             d="M16 7V17"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+    },
+    {
+      id: 'diet-planner',
+      label: 'Diet Planner',
+      path: '/enterprise/diet-planner',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 2C11.4477 2 11 2.44772 11 3V4H7C6.44772 4 6 4.44772 6 5V21C6 21.5523 6.44772 22 7 22H17C17.5523 22 18 21.5523 18 21V5C18 4.44772 17.5523 4 17 4H13V3C13 2.44772 12.5523 2 12 2Z"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M9 8H15M9 12H15M9 16H13"
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"

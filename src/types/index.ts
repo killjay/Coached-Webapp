@@ -379,13 +379,13 @@ export interface NutritionPlan {
 }
 
 export interface DayMeals {
-  breakfast: Meal[];
-  lunch: Meal[];
-  dinner: Meal[];
-  snacks: Meal[];
+  breakfast: TemplateMeal[];
+  lunch: TemplateMeal[];
+  dinner: TemplateMeal[];
+  snacks: TemplateMeal[];
 }
 
-export interface Meal {
+export interface TemplateMeal {
   id: string;
   name: string;
   ingredients: string[];

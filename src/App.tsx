@@ -16,6 +16,7 @@ import RolesManagement from './pages/enterprise/RolesManagement';
 import PendingClients from './pages/enterprise/PendingClients';
 import ClientDashboard from './pages/enterprise/ClientDashboard';
 import WorkoutPlanner from './pages/enterprise/WorkoutPlanner';
+import DietPlanner from './pages/enterprise/DietPlanner';
 import './App.css';
 
 // Protected Route Component
@@ -137,6 +138,7 @@ const AppRoutes: React.FC = () => {
         <Route path="coaches" element={<CoachList />} />
         <Route path="templates" element={<CreateTemplate />} />
         <Route path="workout-planner" element={<WorkoutPlanner />} />
+        <Route path="diet-planner" element={<DietPlanner />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="roles" element={<RolesManagement />} />
         <Route index element={<Navigate to="revenue" replace />} />

@@ -1,7 +1,7 @@
-.workout-planner-page {
+.diet-planner-page {
 }
 
-.workout-planner-grid {
+.diet-planner-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 18px;
@@ -120,66 +120,60 @@
   flex-wrap: wrap;
 }
 
-.exercise-builder {
+.meal-builder {
   border: none;
   background: transparent;
   padding: 0;
 }
 
-.exercise-builder-grid {
+.macro-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
-.muscle-groups {
-  margin-top: 10px;
-}
-
-.muscle-groups-label {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 8px;
-}
-
-.muscle-groups-grid {
+.ingredients-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 8px;
 }
 
-.chip {
+.ingredient-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f3f4f6;
   border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  color: #374151;
   border-radius: 999px;
-  padding: 8px 10px;
-  font-size: 12px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.ingredient-chip button {
+  background: none;
+  border: none;
   cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: #6b7280;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
 
-.chip.active {
-  border-color: #4f7cff;
-  background: rgba(79, 124, 255, 0.12);
-  color: #1d4ed8;
+.ingredient-chip button:hover {
+  background: #e5e7eb;
+  color: #ef4444;
 }
 
-.video-preview {
-  margin-top: 12px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  background: #000;
-}
-
-.video-preview iframe {
-  width: 100%;
-  height: 280px;
-  border: 0;
-  display: block;
-}
-
-.exercise-builder-actions {
+.meal-builder-actions {
   margin-top: 12px;
 }
 
@@ -215,13 +209,34 @@
   user-select: none;
 }
 
-.exercise-list {
+.meal-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.meal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-section-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meal-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.exercise-item {
+.meal-item {
   display: block;
   padding: 12px;
   padding-right: 32px;
@@ -230,22 +245,22 @@
   background: #fff;
 }
 
-.exercise-name {
+.meal-name {
   font-weight: 700;
   color: #111827;
 }
 
-.exercise-meta {
+.meal-meta {
   font-size: 12px;
   color: #6b7280;
   margin-top: 2px;
 }
 
-.exercise-link {
+.meal-ingredients {
   font-size: 12px;
-  color: #3b82f6;
+  color: #9ca3af;
   margin-top: 4px;
-  word-break: break-all;
+  font-style: italic;
 }
 
 .error-text {
@@ -276,10 +291,10 @@
 }
 
 @media (max-width: 1024px) {
-  .workout-planner-grid {
+  .diet-planner-grid {
     grid-template-columns: 1fr;
   }
-  .exercise-builder-grid {
+  .macro-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .schedule-days {
@@ -330,4 +345,3 @@
   border-color: #000000;
   color: #000000;
 }
-

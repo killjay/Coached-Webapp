@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   addDoc,
   collection,
@@ -76,6 +77,17 @@ const emptySchedule = (): WorkoutPlan['schedule'] =>
 const WorkoutPlanner: React.FC = () => {
   const { user } = useAuth();
   const coachId = user?.uid || '';
+  const navigate = useNavigate();
+
+  // Step state
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+
+  // Field errors for validation
+  const [fieldErrors, setFieldErrors] = useState({
+    name: false,
+    description: false,
+    durationWeeks: false,
+  });
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
@@ -116,6 +128,8 @@ const WorkoutPlanner: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [dayMuscleGroups, setDayMuscleGroups] = useState<Record<string, string[]>>({});
 
   const selectedTemplate = useMemo(
     () => templates.find((t) => t.id === selectedTemplateId) || null,
@@ -190,6 +204,34 @@ const WorkoutPlanner: React.FC = () => {
       .filter(Boolean);
   }, [tags]);
 
+  // Auto-expand the selected day when it changes
+  useEffect(() => {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      next.add(selectedDay);
+      return next;
+    });
+  }, [selectedDay]);
+
+  const handleNextStep = () => {
+    // Clear previous errors
+    const errors = {
+      name: !name.trim(),
+      description: !description.trim(),
+      durationWeeks: !durationWeeks || durationWeeks < 1,
+    };
+
+    setFieldErrors(errors);
+
+    // If any errors, don't proceed
+    if (errors.name || errors.description || errors.durationWeeks) {
+      return;
+    }
+
+    // All valid, proceed to step 2
+    setCurrentStep(2);
+  };
+
   const validateTemplate = () => {
     if (!coachId) return 'You must be logged in.';
     if (!name.trim()) return 'Template name is required.';
@@ -223,7 +265,6 @@ const WorkoutPlanner: React.FC = () => {
       name: '',
       instructions: '',
       videoURL: '',
-      muscleGroups: [],
     }));
   };
 
@@ -240,9 +281,32 @@ const WorkoutPlanner: React.FC = () => {
       const next = current.includes(group) ? current.filter((g) => g !== group) : [...current, group];
       return { ...prev, muscleGroups: next };
     });
+    
+    // Update day muscle groups immediately
+    setDayMuscleGroups((prev) => {
+      const currentDayGroups = prev[selectedDay] || [];
+      const nextDayGroups = currentDayGroups.includes(group) 
+        ? currentDayGroups.filter((g) => g !== group) 
+        : [...currentDayGroups, group];
+      return { ...prev, [selectedDay]: nextDayGroups };
+    });
+  };
+
+  const toggleDay = (day: string) => {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) {
+        next.delete(day);
+      } else {
+        next.add(day);
+      }
+      return next;
+    });
   };
 
   const resetForm = () => {
+    setCurrentStep(1);
+    setFieldErrors({ name: false, description: false, durationWeeks: false });
     setSelectedTemplateId(null);
     setName('');
     setDescription('');
@@ -252,6 +316,7 @@ const WorkoutPlanner: React.FC = () => {
     setTags('');
     setSelectedDay('Monday');
     setSchedule(emptySchedule());
+    setDayMuscleGroups({});
     setExerciseDraft({
       name: '',
       sets: 3,
@@ -302,6 +367,11 @@ const WorkoutPlanner: React.FC = () => {
         const ref = await addDoc(collection(db, 'templates'), payload as any);
         setSelectedTemplateId(ref.id);
         setStatus(nextStatus);
+      }
+      
+      // Navigate to templates page after publishing
+      if (nextStatus === 'published') {
+        navigate('/enterprise/templates');
       }
     } catch (err: any) {
       console.error('Failed to save template', err);
@@ -373,309 +443,346 @@ const WorkoutPlanner: React.FC = () => {
   }, [exerciseDraft.videoURL]);
 
   return (
-    <div className="workout-planner-page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Workout Planner</h1>
-          <p className="page-description">Create workout templates and assign them to clients</p>
-        </div>
-        <Button variant="secondary" onClick={resetForm}>
-          + New Template
-        </Button>
-      </div>
-
-      <div className="workout-planner-grid">
-        <Card title="My Workout Templates" className="templates-panel">
-          {templatesLoading ? (
-            <Loader />
-          ) : templatesError ? (
-            <div className="error-text">{templatesError}</div>
-          ) : templates.length === 0 ? (
-            <div className="empty-text">No templates yet. Create your first workout plan.</div>
-          ) : (
-            <div className="template-list">
-              {templates
-                .slice()
-                .sort((a, b) => (b.updatedAt?.toMillis?.() || 0) - (a.updatedAt?.toMillis?.() || 0))
-                .map((t) => (
-                  <button
-                    key={t.id}
-                    className={`template-item ${selectedTemplateId === t.id ? 'active' : ''}`}
-                    onClick={() => setSelectedTemplateId(t.id)}
-                  >
-                    <div className="template-item-main">
-                      <div className="template-item-title">{t.name}</div>
-                      <div className="template-item-subtitle">
-                        {t.difficulty} • {t.duration} weeks
-                      </div>
-                    </div>
-                    <span className={`status-pill status-${t.status}`}>{t.status}</span>
-                  </button>
-                ))}
-            </div>
-          )}
-        </Card>
-
-        <div className="editor-panel">
-          <Card title="Template Details">
-            {saveError && <div className="error-banner">{saveError}</div>}
-            <div className="form-grid">
-              <Input
-                label="Template Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Strength Split (8 weeks)"
-                required
-              />
-              <Select
-                label="Difficulty"
-                options={[
-                  { value: 'beginner', label: 'Beginner' },
-                  { value: 'intermediate', label: 'Intermediate' },
-                  { value: 'advanced', label: 'Advanced' },
-                ]}
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              />
-              <Input
-                label="Duration (weeks)"
-                type="number"
-                value={String(durationWeeks)}
-                onChange={(e) => setDurationWeeks(Number(e.target.value))}
-                placeholder="8"
-              />
-              <Input
-                label="Tags (comma separated)"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="strength, hypertrophy, beginner"
-              />
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <Input
-                label="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Short description for coaches/clients"
-              />
-            </div>
-
-            <div className="template-actions">
-              <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving}>
-                Save Draft
-              </Button>
-              <Button variant="success" onClick={() => handleSave('published')} loading={saving}>
-                Publish
-              </Button>
-              {selectedTemplateId && (
-                <Button variant="danger" onClick={handleDelete} disabled={saving}>
-                  Delete
+    <>
+      <div className="workout-planner-page">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {currentStep === 2 && (
+                <Button variant="ghost" size="medium" onClick={() => setCurrentStep(1)}>
+                  ← Back
                 </Button>
               )}
             </div>
-            {selectedTemplateId && (
-              <div className="meta-row">
-                <span className={`status-pill status-${status}`}>Status: {status}</span>
-              </div>
-            )}
-          </Card>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {currentStep === 2 && (
+                <Button variant="secondary" onClick={() => handleSave('draft')} loading={saving} className="btn-save-drafts">
+                  Save to Drafts
+                </Button>
+              )}
+              {currentStep === 2 && (
+                <Button key="save-publish-header" variant="success" onClick={() => handleSave('published')} loading={saving}>
+                  Publish
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Workout Planner</h1>
+            </div>
+          </div>
+        </div>
 
-          <Card title="Schedule Builder" subtitle="Add exercises to each day">
+      <div className="workout-planner-grid">
+        <div className="editor-panel">
+          {currentStep === 1 && (
+            <>
+            <Card title="Template Details">
+              <div className="form-grid">
+                <Input
+                  label="Template Name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: false });
+                  }}
+                  placeholder="e.g., Strength Split (8 weeks)"
+                  required
+                  error={fieldErrors.name ? 'Required' : undefined}
+                />
+                <Select
+                  label="Difficulty"
+                  options={[
+                    { value: 'beginner', label: 'Beginner' },
+                    { value: 'intermediate', label: 'Intermediate' },
+                    { value: 'advanced', label: 'Advanced' },
+                  ]}
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                />
+                <Input
+                  label="Duration (weeks)"
+                  type="number"
+                  value={String(durationWeeks)}
+                  onChange={(e) => {
+                    setDurationWeeks(Number(e.target.value));
+                    if (fieldErrors.durationWeeks) setFieldErrors({ ...fieldErrors, durationWeeks: false });
+                  }}
+                  placeholder="8"
+                  error={fieldErrors.durationWeeks ? 'Required (min 1)' : undefined}
+                />
+                <Input
+                  label="Tags (comma separated)"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="strength, hypertrophy, beginner"
+                />
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <div className={`input-wrapper ${fieldErrors.description ? 'has-error' : ''}`}>
+                  <label className="input-label">Description</label>
+                  <div className="input-container">
+                    <textarea
+                      className={`input textarea-input ${fieldErrors.description ? 'input-error' : ''}`}
+                      value={description}
+                      onChange={(e) => {
+                        setDescription(e.target.value);
+                        if (fieldErrors.description) setFieldErrors({ ...fieldErrors, description: false });
+                      }}
+                      placeholder="Short description for coaches/clients"
+                      rows={4}
+                    />
+                  </div>
+                  {fieldErrors.description && <span className="input-error-text">Required</span>}
+                </div>
+              </div>
+
+              <div className="template-actions">
+                <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving}>
+                  Save Draft
+                </Button>
+                <Button variant="primary" onClick={handleNextStep}>
+                  Next
+                </Button>
+                {selectedTemplateId && (
+                  <Button variant="danger" onClick={handleDelete} disabled={saving}>
+                    Delete
+                  </Button>
+                )}
+              </div>
+              {selectedTemplateId && (
+                <div className="meta-row">
+                  <span className={`status-pill status-${status}`}>Status: {status}</span>
+                </div>
+              )}
+            </Card>
+            </>
+          )}
+
+          {currentStep === 2 && (
+            <div className="step-2-layout">
+            {/* Toolbar - Top Left */}
+            <Card>
             <div className="schedule-toolbar">
               <Select
                 label="Day"
                 options={DAYS.map((d) => ({ value: d, label: d }))}
                 value={selectedDay}
-                onChange={(e) => setSelectedDay(e.target.value as any)}
+                onChange={(e) => {
+                  const newDay = e.target.value as any;
+                  setSelectedDay(newDay);
+                  setExpandedDays(new Set([newDay]));
+                  // Load the muscle groups that were previously selected for this day
+                  const dayGroups = dayMuscleGroups[newDay] || [];
+                  setExerciseDraft((prev) => ({ ...prev, muscleGroups: dayGroups }));
+                }}
               />
-              <Select
-                label="Filter"
-                options={[
-                  { value: '', label: 'All muscle groups' },
-                  ...MUSCLE_GROUPS.map((g) => ({ value: g, label: g })),
-                ]}
-                value={filterMuscleGroup}
-                onChange={(e) => setFilterMuscleGroup(e.target.value)}
+            </div>
+
+            <div className="muscle-groups">
+              <div className="muscle-groups-grid">
+                {MUSCLE_GROUPS.map((g) => {
+                  const active = Array.isArray(exerciseDraft.muscleGroups) && exerciseDraft.muscleGroups.includes(g);
+                  return (
+                    <button
+                      type="button"
+                      key={g}
+                      className={`chip ${active ? 'active' : ''}`}
+                      onClick={() => toggleMuscleGroup(g)}
+                    >
+                      {g}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+
+            {/* Weekly Schedule - Right Side (spans 2 rows) */}
+            <div className="schedule-days">
+              {DAYS.map((day) => {
+                const isExpanded = expandedDays.has(day);
+                const dayExercises = schedule[day] || [];
+                const exerciseMuscleGroups = Array.from(
+                  new Set(
+                    dayExercises.flatMap((ex) => ex.muscleGroups || [])
+                  )
+                );
+                // Combine immediate selections with exercise muscle groups
+                const immediateMuscleGroups = dayMuscleGroups[day] || [];
+                const allMuscleGroups = Array.from(
+                  new Set([...immediateMuscleGroups, ...exerciseMuscleGroups])
+                );
+                return (
+                  <div key={day} className={`day-block ${isExpanded ? 'expanded' : ''}`}>
+                    <div className="day-title" onClick={() => toggleDay(day)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>{day}</span>
+                        {allMuscleGroups.length > 0 && (
+                          <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 400 }}>
+                            • {allMuscleGroups.join(', ')}
+                          </span>
+                        )}
+                      </div>
+                      <svg 
+                        style={{ 
+                          width: '20px', 
+                          height: '20px', 
+                          transition: 'transform 0.2s', 
+                          transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                          color: '#9ca3af',
+                          flexShrink: 0
+                        }} 
+                        viewBox="0 0 20 20" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M6 8L10 12L14 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    {isExpanded && (() => {
+                      const list = schedule[day] || [];
+                      const filtered = list.filter((ex) => {
+                        const matchesGroup = !filterMuscleGroup
+                          ? true
+                          : (ex.muscleGroups || []).includes(filterMuscleGroup);
+                        const matchesSearch = !exerciseSearch
+                          ? true
+                          : `${ex.name} ${ex.instructions || ''}`
+                              .toLowerCase()
+                              .includes(exerciseSearch.toLowerCase());
+                        return matchesGroup && matchesSearch;
+                      });
+
+                      if (filtered.length === 0) {
+                        return <div className="empty-text">No exercises</div>;
+                      }
+
+                      return (
+                        <div className="exercise-list">
+                          {filtered.map((ex) => (
+                            <div key={ex.id} className="exercise-item" style={{ position: 'relative' }}>
+                              <button
+                                onClick={() => removeExercise(day, ex.id)}
+                                style={{
+                                  position: 'absolute',
+                                  top: '8px',
+                                  right: '8px',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#9ca3af',
+                                  transition: 'color 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                              <div className="exercise-item-main">
+                                <div className="exercise-name">{ex.name}</div>
+                                <div className="exercise-meta">
+                                  {ex.sets}×{ex.reps} • Rest {ex.restPeriod}s
+                                </div>
+                                {ex.videoURL && <div className="exercise-link">{ex.videoURL}</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
+            </div>
+
+          {/* Exercise Builder - Bottom Left */}
+          <Card>
+          <div className="exercise-builder">
+            <Input
+              label="Exercise name"
+              value={String(exerciseDraft.name || '')}
+              onChange={(e) => setExerciseDraft((p) => ({ ...p, name: e.target.value }))}
+              placeholder="e.g., Bench Press"
+            />
+            
+            <div className="exercise-builder-grid" style={{ marginTop: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+              <Input
+                label="Sets"
+                type="number"
+                value={String(exerciseDraft.sets ?? 3)}
+                onChange={(e) => setExerciseDraft((p) => ({ ...p, sets: Number(e.target.value) }))}
               />
               <Input
-                label="Search"
-                value={exerciseSearch}
-                onChange={(e) => setExerciseSearch(e.target.value)}
-                placeholder="Search exercises..."
+                label="Reps"
+                type="number"
+                value={String(exerciseDraft.reps ?? 10)}
+                onChange={(e) => setExerciseDraft((p) => ({ ...p, reps: Number(e.target.value) }))}
+              />
+              <Input
+                label="Rest (sec)"
+                type="number"
+                value={String(exerciseDraft.restPeriod ?? 60)}
+                onChange={(e) => setExerciseDraft((p) => ({ ...p, restPeriod: Number(e.target.value) }))}
               />
             </div>
 
-            <div className="exercise-builder">
-              <div className="exercise-builder-grid">
-                <Input
-                  label="Exercise name"
-                  value={String(exerciseDraft.name || '')}
-                  onChange={(e) => setExerciseDraft((p) => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g., Bench Press"
-                />
-                <Input
-                  label="Sets"
-                  type="number"
-                  value={String(exerciseDraft.sets ?? 3)}
-                  onChange={(e) => setExerciseDraft((p) => ({ ...p, sets: Number(e.target.value) }))}
-                />
-                <Input
-                  label="Reps"
-                  type="number"
-                  value={String(exerciseDraft.reps ?? 10)}
-                  onChange={(e) => setExerciseDraft((p) => ({ ...p, reps: Number(e.target.value) }))}
-                />
-                <Input
-                  label="Rest (sec)"
-                  type="number"
-                  value={String(exerciseDraft.restPeriod ?? 60)}
-                  onChange={(e) => setExerciseDraft((p) => ({ ...p, restPeriod: Number(e.target.value) }))}
-                />
-              </div>
-
-              <div className="exercise-builder-grid" style={{ marginTop: 10 }}>
-                <Input
-                  label="YouTube URL (optional)"
-                  value={String(exerciseDraft.videoURL || '')}
-                  onChange={(e) => setExerciseDraft((p) => ({ ...p, videoURL: e.target.value }))}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  helpText={exerciseDraft.videoURL ? (embedUrl ? 'Preview available below.' : 'Invalid YouTube URL.') : undefined}
-                />
-                <Input
-                  label="Instructions"
-                  value={String(exerciseDraft.instructions || '')}
-                  onChange={(e) => setExerciseDraft((p) => ({ ...p, instructions: e.target.value }))}
-                  placeholder="Cues, tempo, breathing, etc."
-                />
-              </div>
-
-              <div className="muscle-groups">
-                <div className="muscle-groups-label">Muscle groups</div>
-                <div className="muscle-groups-grid">
-                  {MUSCLE_GROUPS.map((g) => {
-                    const active = Array.isArray(exerciseDraft.muscleGroups) && exerciseDraft.muscleGroups.includes(g);
-                    return (
-                      <button
-                        type="button"
-                        key={g}
-                        className={`chip ${active ? 'active' : ''}`}
-                        onClick={() => toggleMuscleGroup(g)}
-                      >
-                        {g}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {embedUrl && (
-                <div className="video-preview">
-                  <iframe
-                    title="YouTube preview"
-                    src={embedUrl}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
+            <div style={{ marginTop: 10 }}>
+              <Input
+                label="YouTube URL (optional)"
+                value={String(exerciseDraft.videoURL || '')}
+                onChange={(e) => setExerciseDraft((p) => ({ ...p, videoURL: e.target.value }))}
+                placeholder="https://www.youtube.com/watch?v=..."
+                helpText={exerciseDraft.videoURL ? (embedUrl ? 'Preview available below.' : 'Invalid YouTube URL.') : undefined}
+              />
+            </div>
+            
+            <div style={{ marginTop: 10 }}>
+              <div className="input-wrapper">
+                <label className="input-label">Instructions</label>
+                <div className="input-container">
+                  <textarea
+                    className="input textarea-input"
+                    value={String(exerciseDraft.instructions || '')}
+                    onChange={(e) => setExerciseDraft((p) => ({ ...p, instructions: e.target.value }))}
+                    placeholder="Cues, tempo, breathing, etc."
+                    rows={3}
                   />
                 </div>
-              )}
-
-              <div className="exercise-builder-actions">
-                <Button variant="primary" onClick={addExerciseToDay}>
-                  + Add to {selectedDay}
-                </Button>
               </div>
             </div>
 
-            <div className="schedule-days">
-              {DAYS.map((day) => (
-                <div key={day} className="day-block">
-                  <div className="day-title">{day}</div>
-                  {(() => {
-                    const list = schedule[day] || [];
-                    const filtered = list.filter((ex) => {
-                      const matchesGroup = !filterMuscleGroup
-                        ? true
-                        : (ex.muscleGroups || []).includes(filterMuscleGroup);
-                      const matchesSearch = !exerciseSearch
-                        ? true
-                        : `${ex.name} ${ex.instructions || ''}`
-                            .toLowerCase()
-                            .includes(exerciseSearch.toLowerCase());
-                      return matchesGroup && matchesSearch;
-                    });
-
-                    if (filtered.length === 0) {
-                      return <div className="empty-text">No exercises</div>;
-                    }
-
-                    return (
-                      <div className="exercise-list">
-                        {filtered.map((ex) => (
-                          <div key={ex.id} className="exercise-item">
-                            <div className="exercise-item-main">
-                              <div className="exercise-name">{ex.name}</div>
-                              <div className="exercise-meta">
-                                {ex.sets}×{ex.reps} • Rest {ex.restPeriod}s
-                                {ex.muscleGroups && ex.muscleGroups.length > 0 ? ` • ${ex.muscleGroups.join(', ')}` : ''}
-                              </div>
-                              {ex.videoURL && <div className="exercise-link">Video: {ex.videoURL}</div>}
-                            </div>
-                            <Button size="small" variant="ghost" onClick={() => removeExercise(day, ex.id)}>
-                              Remove
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card title="Assign to Client" subtitle="Assign a published template to a client">
-            {clientsLoading ? (
-              <Loader />
-            ) : clientsError ? (
-              <div className="error-text">{clientsError}</div>
-            ) : (
-              <>
-                {assignError && <div className="error-banner">{assignError}</div>}
-                {assignSuccess && <div className="success-banner">{assignSuccess}</div>}
-
-                <div className="form-grid">
-                  <Select
-                    label="Client"
-                    options={[
-                      { value: '', label: 'Select a client...' },
-                      ...clients.map((c) => ({ value: c.id, label: c.fullName || c.email || c.id })),
-                    ]}
-                    value={assignClientId}
-                    onChange={(e) => setAssignClientId(e.target.value)}
-                  />
-                  <Select
-                    label="Template"
-                    options={[
-                      { value: '', label: 'Select a template...' },
-                      ...templates
-                        .filter((t) => t.status === 'published')
-                        .map((t) => ({ value: t.id, label: t.name })),
-                    ]}
-                    value={selectedTemplateId || ''}
-                    onChange={(e) => setSelectedTemplateId(e.target.value || null)}
-                  />
-                </div>
-                <div className="template-actions">
-                  <Button variant="success" onClick={handleAssign} loading={assigning}>
-                    Assign Plan
-                  </Button>
-                </div>
-              </>
+            {embedUrl && (
+              <div className="video-preview">
+                <iframe
+                  title="YouTube preview"
+                  src={embedUrl}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
             )}
+
+            <div className="exercise-builder-actions">
+              <Button variant="primary" onClick={addExerciseToDay}>
+                Add to {selectedDay}
+              </Button>
+            </div>
+          </div>
           </Card>
+          </div>
+          )}
         </div>
       </div>
     </div>
+    </>
   );
 };
 
