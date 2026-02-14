@@ -55,8 +55,11 @@ Complete side navigation with 8 feature modules (Enterprise plan only):
 7. **Calendar**
    - Appointment management
    - Multiple view options (Month/Week/Day)
+   - Multi-coach view with color coding
    - Appointment creation modal
    - Coach and client scheduling
+   - **Automatic email invites** to coach and client
+   - Calendar invite (.ics) attachments
 
 8. **Roles Management**
    - Permission matrix
@@ -84,6 +87,7 @@ Complete side navigation with 8 feature modules (Enterprise plan only):
 
 ### ✅ Firebase Cloud Functions
 Located in `/functions/src/`:
+- **index.ts** - Appointment email notifications with calendar invites
 - **revenue.ts** - Revenue calculations and reporting
 - **notifications.ts** - Email notifications (welcome, verification, reminders)
 - **aggregation.ts** - Coach and client metrics aggregation
@@ -112,12 +116,20 @@ npm install
    - Ensure `.env.local` has your Firebase credentials
    - File should contain: `REACT_APP_FIREBASE_*` variables
 
-3. **Install Cloud Functions dependencies (optional):**
+3. **Install Cloud Functions dependencies:**
 ```bash
 cd functions
 npm install
 cd ..
 ```
+
+4. **Configure email service for appointment invites:**
+```bash
+# Set up Gmail credentials for sending emails
+firebase functions:config:set email.user="your-gmail@gmail.com"
+firebase functions:config:set email.pass="your-app-password"
+```
+See `functions/SETUP_GUIDE.md` for detailed email setup instructions.
 
 ### Running the Application
 
@@ -180,12 +192,14 @@ c:\Projects\Coached\
 │   │   └── config.ts        # Firebase initialization
 │   └── App.tsx              # Routing with EnterpriseRoute guard
 ├── functions/
-│   └── src/
-│       ├── index.ts
-│       ├── revenue.ts
-│       ├── notifications.ts
-│       ├── aggregation.ts
-│       └── scheduled.ts
+│   ├── src/
+│   │   └── index.ts         # Appointment email notifications
+│   ├── README.md            # Cloud Functions documentation
+│   ├── SETUP_GUIDE.md       # Email setup guide
+│   ├── setup.sh             # Setup script (Linux/Mac)
+│   ├── setup.ps1            # Setup script (Windows)
+│   ├── package.json
+│   └── tsconfig.json
 ├── firebase.json            # Firebase configuration
 ├── firestore.rules          # Security rules
 ├── firestore.indexes.json   # Database indexes

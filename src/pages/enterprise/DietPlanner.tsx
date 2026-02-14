@@ -219,20 +219,22 @@ const DietPlanner: React.FC = () => {
     setCurrentStep(2);
   };
 
-  const validateTemplate = () => {
+  const validateTemplate = (skipMealCheck: boolean = false) => {
     if (!coachId) return 'You must be logged in.';
     if (!name.trim()) return 'Template name is required.';
-    const totalMeals = Object.values(meals).reduce(
-      (sum, dayMeals) =>
-        sum +
-        (dayMeals?.breakfast?.length || 0) +
-        (dayMeals?.['morning-snack']?.length || 0) +
-        (dayMeals?.lunch?.length || 0) +
-        (dayMeals?.['evening-snack']?.length || 0) +
-        (dayMeals?.dinner?.length || 0),
-      0
-    );
-    if (totalMeals === 0) return 'Add at least one meal to the plan.';
+    if (!skipMealCheck) {
+      const totalMeals = Object.values(meals).reduce(
+        (sum, dayMeals) =>
+          sum +
+          (dayMeals?.breakfast?.length || 0) +
+          (dayMeals?.['morning-snack']?.length || 0) +
+          (dayMeals?.lunch?.length || 0) +
+          (dayMeals?.['evening-snack']?.length || 0) +
+          (dayMeals?.dinner?.length || 0),
+        0
+      );
+      if (totalMeals === 0) return 'Add at least one meal to the plan.';
+    }
     return null;
   };
 
@@ -354,11 +356,11 @@ const DietPlanner: React.FC = () => {
     setAssignSuccess(null);
   };
 
-  const handleSave = async (nextStatus: TemplateStatus) => {
+  const handleSave = async (nextStatus: TemplateStatus, skipMealCheck: boolean = false) => {
     setSaveError(null);
     setAssignSuccess(null);
 
-    const validationError = validateTemplate();
+    const validationError = validateTemplate(skipMealCheck);
     if (validationError) {
       setSaveError(validationError);
       return;
@@ -554,7 +556,7 @@ const DietPlanner: React.FC = () => {
                   </div>
 
                   <div className="template-actions">
-                    <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving}>
+                    <Button variant="secondary" onClick={() => handleSave('draft', true)} disabled={saving}>
                       Save Draft
                     </Button>
                     <Button variant="primary" onClick={handleNextStep}>

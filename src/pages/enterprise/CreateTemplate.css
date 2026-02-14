@@ -58,38 +58,88 @@
 .template-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
+/* Header with title/description on left, actions on right */
 .template-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.template-card-header > div:first-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .template-card-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1d2e;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
   margin: 0;
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
+.template-card-description {
+  color: #6e6e73;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Actions in header */
+.template-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Meta info with status badge and bullet separators */
+.template-card-title .template-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: #6e6e73;
+  flex-wrap: wrap;
+  margin-top: 0;
+  font-weight: 400;
+}
+
+.template-card-title .template-card-meta > span {
+  display: flex;
+  align-items: center;
+}
+
+.template-card-title .template-card-meta > span:not(.status-badge)::before {
+  content: "•";
+  margin-right: 16px;
+  color: #d2d2d7;
+}
+
+.template-card-title .template-card-meta > span:first-child::before {
+  display: none;
+}
+
+/* Status badge styling */
 .status-badge {
-  font-size: 11px;
-  font-weight: 600;
   padding: 4px 10px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .status-badge.status-published {
-  background: rgba(16, 185, 129, 0.1);
-  color: #065f46;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: #d1f4e0;
+  color: #0a7d3e;
 }
 
 .status-badge.status-draft {
@@ -98,46 +148,34 @@
   border: 1px solid rgba(245, 158, 11, 0.35);
 }
 
-.template-card-description {
-  color: #6b7280;
-  font-size: 14px;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.template-card-meta {
-  display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.template-card-date {
-  font-size: 12px;
-  color: #9ca3af;
-  font-style: italic;
-  margin-top: 4px;
-}
-
+/* Tags section */
 .template-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.template-tags:empty {
+  display: none;
 }
 
 .template-tag {
-  font-size: 12px;
-  padding: 4px 10px;
-  background: #f3f4f6;
-  color: #4b5563;
-  border-radius: 999px;
-  border: 1px solid #e5e7eb;
+  padding: 5px 12px;
+  background: #f5f5f7;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1d1d1f;
+  font-weight: 500;
 }
 
-.template-card-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
+/* Date info with top border */
+.template-card-date {
+  font-size: 13px;
+  color: #86868b;
+  padding-top: 12px;
+  border-top: 1px solid #f5f5f7;
+  margin-top: 5px;
 }
 
 .exercise-row {

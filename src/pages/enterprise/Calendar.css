@@ -25,6 +25,8 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 .calendar-legend {
@@ -33,6 +35,14 @@
   align-items: center;
   font-size: 12px;
   color: #6b7280;
+  flex-wrap: wrap;
+}
+
+.coach-color-legend {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .calendar-legend-item {
@@ -61,6 +71,39 @@
   grid-template-columns: repeat(7, 1fr);
 }
 
+.week-grid {
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.week-grid .month-grid-day {
+  height: 150px;
+  min-height: 150px;
+  max-height: 150px;
+}
+
+.day-grid {
+  grid-template-columns: 1fr;
+}
+
+.day-grid .month-grid-day {
+  min-height: 500px;
+  padding: 20px;
+}
+
+.day-grid .month-grid-day-number {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.day-grid .day-chips {
+  gap: 10px;
+}
+
+.day-grid .day-chip {
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
 .month-grid-header {
   padding: 10px 8px;
   font-size: 12px;
@@ -75,7 +118,9 @@
   border: 0;
   background: #fff;
   cursor: pointer;
-  min-height: 128px;
+  height: 150px;
+  min-height: 150px;
+  max-height: 150px;
   padding: 10px 10px 8px 10px;
   text-align: left;
   border-bottom: 1px solid #eef2f7;
@@ -84,6 +129,7 @@
   flex-direction: column;
   gap: 8px;
   justify-content: flex-start;
+  overflow: hidden;
 }
 
 .month-grid-day:nth-child(7n + 7) {

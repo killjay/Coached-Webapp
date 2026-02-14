@@ -32,6 +32,7 @@ import {
   startOfDay,
   startOfMonth,
   startOfWeek,
+  addWeeks,
 } from 'date-fns';
 
 function formatAppointmentChip(apt: Appointment): string {
@@ -47,10 +48,41 @@ function formatAppointmentChip(apt: Appointment): string {
   return `${timePart ? `${timePart} ` : ''}${typePart}`;
 }
 
+// Generate consistent color for each coach
+function getCoachColor(coachId: string, index: number): string {
+  const colors = [
+    '#4f7cff', // blue
+    '#10b981', // green
+    '#f59e0b', // amber
+    '#ef4444', // red
+    '#8b5cf6', // violet
+    '#ec4899', // pink
+    '#06b6d4', // cyan
+    '#f97316', // orange
+    '#6366f1', // indigo
+    '#14b8a6', // teal
+  ];
+  
+  // Use index if provided, otherwise hash the coachId
+  if (index >= 0) {
+    return colors[index % colors.length];
+  }
+  
+  // Simple hash function for consistent color per coachId
+  let hash = 0;
+  for (let i = 0; i < coachId.length; i++) {
+    hash = coachId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
 type DayChip = {
   key: string;
   kind: 'meeting' | 'task';
   label: string;
+  coachId?: string;
+  coachName?: string;
+  color?: string;
 };
 
 const Calendar: React.FC = () => {
@@ -74,11 +106,48 @@ const Calendar: React.FC = () => {
   const [tasks, setTasks] = useState<CoachTask[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [tasksError, setTasksError] = useState<string | null>(null);
+  
+  // Appointment form state
+  const [clients, setClients] = useState<any[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [appointmentClientId, setAppointmentClientId] = useState('');
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('09:00');
+  const [appointmentType, setAppointmentType] = useState<'training' | 'consultation' | 'assessment' | 'follow_up'>('training');
+  const [appointmentDuration, setAppointmentDuration] = useState(60);
+  const [appointmentMedium, setAppointmentMedium] = useState<'in_person' | 'virtual'>('in_person');
+  const [appointmentAddress, setAppointmentAddress] = useState('');
+  const [appointmentVirtualPlatform, setAppointmentVirtualPlatform] = useState<'zoom' | 'google_meet' | 'teams'>('zoom');
+  const [appointmentSaving, setAppointmentSaving] = useState(false);
 
-  const monthTitle = useMemo(() => format(monthCursor, 'MMMM yyyy'), [monthCursor]);
+  const monthTitle = useMemo(() => {
+    if (view === 'day') {
+      return format(selectedDate, 'EEEE, MMMM d, yyyy');
+    }
+    if (view === 'week') {
+      const start = startOfWeek(selectedDate, { weekStartsOn: 0 });
+      const end = endOfWeek(selectedDate, { weekStartsOn: 0 });
+      return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
+    }
+    return format(monthCursor, 'MMMM yyyy');
+  }, [monthCursor, selectedDate, view]);
   const selectedDateLabel = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
 
   const calendarDays = useMemo(() => {
+    if (view === 'day') {
+      return [selectedDate];
+    }
+    
+    if (view === 'week') {
+      const start = startOfWeek(selectedDate, { weekStartsOn: 0 });
+      const days: Date[] = [];
+      for (let i = 0; i < 7; i++) {
+        days.push(addDays(start, i));
+      }
+      return days;
+    }
+    
+    // month view
     const start = startOfWeek(startOfMonth(monthCursor), { weekStartsOn: 0 });
     const end = endOfWeek(endOfMonth(monthCursor), { weekStartsOn: 0 });
 
@@ -87,7 +156,7 @@ const Calendar: React.FC = () => {
       days.push(d);
     }
     return days;
-  }, [monthCursor]);
+  }, [monthCursor, selectedDate, view]);
 
   const handleSelectDay = (day: Date) => {
     setSelectedDate(day);
@@ -137,8 +206,28 @@ const Calendar: React.FC = () => {
     }
   }, [coaches, didAutoSelectCoach, selectedCoachId, user?.email]);
 
+  // Load clients for appointment form
+  useEffect(() => {
+    setClientsLoading(true);
+    const q = query(collection(db, 'client_profiles'), orderBy('fullName', 'asc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const rows = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        setClients(rows);
+        setClientsLoading(false);
+      },
+      (error) => {
+        console.error('Error loading clients:', error);
+        setClients([]);
+        setClientsLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
   const coachOptions = useMemo(() => {
-    const base = [{ value: '', label: coachesLoading ? 'Loading coaches...' : 'Select coach' }];
+    const base = [{ value: '', label: coachesLoading ? 'Loading coaches...' : 'All Coaches' }];
     if (coachesError) return [{ value: '', label: 'Failed to load coaches' }];
     return base.concat(
       coaches.map((c) => ({
@@ -148,27 +237,58 @@ const Calendar: React.FC = () => {
     );
   }, [coaches, coachesError, coachesLoading]);
 
-  useEffect(() => {
-    if (!selectedCoachId) {
-      setAppointments([]);
-      setAppointmentsLoading(false);
-      setAppointmentsError(null);
-      return;
-    }
+  // Create color map for coaches
+  const coachColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    coaches.forEach((coach, index) => {
+      map.set(coach.id, getCoachColor(coach.id, index));
+    });
+    return map;
+  }, [coaches]);
 
+  // Create coach name map for easy lookup
+  const coachNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    coaches.forEach((coach) => {
+      map.set(coach.id, coach.fullName || coach.email || 'Unknown Coach');
+    });
+    return map;
+  }, [coaches]);
+
+  // Create client name map for easy lookup
+  const clientNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    clients.forEach((client) => {
+      map.set(client.id, client.fullName || client.email || 'Unknown Client');
+    });
+    return map;
+  }, [clients]);
+
+  useEffect(() => {
     setAppointmentsLoading(true);
     setAppointmentsError(null);
 
-    const monthStart = startOfMonth(monthCursor);
-    const monthEnd = endOfMonth(monthCursor);
+    let rangeStart: Date, rangeEnd: Date;
+    
+    if (view === 'day') {
+      rangeStart = startOfDay(selectedDate);
+      rangeEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
+    } else if (view === 'week') {
+      rangeStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
+      rangeEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
+    } else {
+      rangeStart = startOfMonth(monthCursor);
+      rangeEnd = endOfMonth(monthCursor);
+    }
 
-    const q = query(
-      collection(db, 'appointments'),
-      where('coachId', '==', selectedCoachId),
-      where('startTime', '>=', Timestamp.fromDate(monthStart)),
-      where('startTime', '<=', Timestamp.fromDate(monthEnd)),
-      orderBy('startTime', 'asc')
-    );
+    // Query all appointments if no coach selected, or just one coach's appointments
+    const q = selectedCoachId
+      ? query(collection(db, 'appointments'), where('coachId', '==', selectedCoachId))
+      : query(collection(db, 'appointments'));
+    
+    // Capture dates for filtering
+    const startDate = rangeStart;
+    const endDate = rangeEnd;
 
     const unsubscribe = onSnapshot(
       q,
@@ -181,19 +301,54 @@ const Calendar: React.FC = () => {
           } as Appointment;
         });
 
-        setAppointments(rows);
+        // Filter by date range and sort - ALL in JavaScript
+        const filteredRows = rows
+          .filter((apt) => {
+            const startTime = (apt as any)?.startTime;
+            const aptDate: Date | null =
+              startTime && typeof startTime.toDate === 'function'
+                ? startTime.toDate()
+                : startTime instanceof Date
+                  ? startTime
+                  : null;
+            
+            if (!aptDate) return false;
+            return aptDate >= startDate && aptDate <= endDate;
+          })
+          .sort((a, b) => {
+            // Sort by startTime ascending
+            const aStart: any = (a as any)?.startTime;
+            const bStart: any = (b as any)?.startTime;
+            const aDate = aStart && typeof aStart.toDate === 'function' ? aStart.toDate() : null;
+            const bDate = bStart && typeof bStart.toDate === 'function' ? bStart.toDate() : null;
+            if (!aDate || !bDate) return 0;
+            return aDate.getTime() - bDate.getTime();
+          });
+
+        console.log(`Loaded ${filteredRows.length} appointments${selectedCoachId ? ' for coach ' + selectedCoachId : ' (all coaches)'} between ${format(startDate, 'yyyy-MM-dd')} and ${format(endDate, 'yyyy-MM-dd')}:`, filteredRows);
+        setAppointments(filteredRows);
         setAppointmentsLoading(false);
+        setAppointmentsError(null);
       },
       (error) => {
         console.error('Error loading appointments:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        // Check if it's an index error
+        if (error.message.includes('index')) {
+          setAppointmentsError('Firestore index required. Check console for link to create it.');
+        } else {
+          setAppointmentsError(`Failed to load appointments: ${error.message}`);
+        }
+        
         setAppointments([]);
         setAppointmentsLoading(false);
-        setAppointmentsError('Failed to load appointments.');
       }
     );
 
     return () => unsubscribe();
-  }, [monthCursor, selectedCoachId]);
+  }, [monthCursor, selectedCoachId, selectedDate, view]);
 
   const appointmentsByDayKey = useMemo(() => {
     const map = new Map<string, number>();
@@ -265,26 +420,30 @@ const Calendar: React.FC = () => {
   }, [appointments, selectedDate]);
 
   useEffect(() => {
-    if (!selectedCoachId) {
-      setTasks([]);
-      setTasksLoading(false);
-      setTasksError(null);
-      return;
-    }
-
     setTasksLoading(true);
     setTasksError(null);
 
-    const monthStart = startOfMonth(monthCursor);
-    const monthEnd = endOfMonth(monthCursor);
+    let rangeStart: Date, rangeEnd: Date;
+    
+    if (view === 'day') {
+      rangeStart = startOfDay(selectedDate);
+      rangeEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
+    } else if (view === 'week') {
+      rangeStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
+      rangeEnd = endOfWeek(selectedDate, { weekStartsOn: 0 });
+    } else {
+      rangeStart = startOfMonth(monthCursor);
+      rangeEnd = endOfMonth(monthCursor);
+    }
 
-    const q = query(
-      collection(db, 'coach_tasks'),
-      where('coachId', '==', selectedCoachId),
-      where('dueDate', '>=', Timestamp.fromDate(monthStart)),
-      where('dueDate', '<=', Timestamp.fromDate(monthEnd)),
-      orderBy('dueDate', 'asc')
-    );
+    // Query all tasks if no coach selected, or just one coach's tasks
+    const q = selectedCoachId
+      ? query(collection(db, 'coach_tasks'), where('coachId', '==', selectedCoachId))
+      : query(collection(db, 'coach_tasks'));
+    
+    // Capture dates for filtering
+    const startDate = rangeStart;
+    const endDate = rangeEnd;
 
     const unsubscribe = onSnapshot(
       q,
@@ -297,7 +456,27 @@ const Calendar: React.FC = () => {
           } as CoachTask;
         });
 
-        setTasks(rows);
+        // Filter by date range and sort - ALL in JavaScript
+        const filteredRows = rows
+          .filter((task) => {
+            const due: any = (task as any)?.dueDate;
+            const dueDate: Date | null =
+              due && typeof due.toDate === 'function' ? due.toDate() : due instanceof Date ? due : null;
+            
+            if (!dueDate) return false;
+            return dueDate >= startDate && dueDate <= endDate;
+          })
+          .sort((a, b) => {
+            // Sort by dueDate ascending
+            const aDue: any = (a as any)?.dueDate;
+            const bDue: any = (b as any)?.dueDate;
+            const aDate = aDue && typeof aDue.toDate === 'function' ? aDue.toDate() : null;
+            const bDate = bDue && typeof bDue.toDate === 'function' ? bDue.toDate() : null;
+            if (!aDate || !bDate) return 0;
+            return aDate.getTime() - bDate.getTime();
+          });
+
+        setTasks(filteredRows);
         setTasksLoading(false);
       },
       (error) => {
@@ -309,7 +488,7 @@ const Calendar: React.FC = () => {
     );
 
     return () => unsubscribe();
-  }, [monthCursor, selectedCoachId]);
+  }, [monthCursor, selectedCoachId, selectedDate, view]);
 
   const tasksByDayKey = useMemo(() => {
     const map = new Map<string, number>();
@@ -386,6 +565,81 @@ const Calendar: React.FC = () => {
     }
   };
 
+  const createAppointment = async () => {
+    if (!selectedCoachId || !appointmentClientId || !appointmentDate || !appointmentTime) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Validate medium-specific fields
+    if (appointmentMedium === 'in_person' && !appointmentAddress.trim()) {
+      alert('Please enter an address for in-person appointments.');
+      return;
+    }
+
+    setAppointmentSaving(true);
+    try {
+      // Combine date and time
+      const [hours, minutes] = appointmentTime.split(':').map(Number);
+      const startDateTime = new Date(appointmentDate);
+      startDateTime.setHours(hours, minutes, 0, 0);
+      
+      const endDateTime = new Date(startDateTime);
+      endDateTime.setMinutes(endDateTime.getMinutes() + appointmentDuration);
+
+      const appointmentData: any = {
+        coachId: selectedCoachId,
+        clientId: appointmentClientId,
+        startTime: Timestamp.fromDate(startDateTime),
+        endTime: Timestamp.fromDate(endDateTime),
+        type: appointmentType,
+        medium: appointmentMedium,
+        status: 'scheduled',
+        notes: '',
+        createdAt: Timestamp.now(),
+      };
+
+      // Add medium-specific fields
+      if (appointmentMedium === 'in_person') {
+        appointmentData.address = appointmentAddress;
+      } else {
+        appointmentData.virtualPlatform = appointmentVirtualPlatform;
+      }
+
+      console.log('Creating appointment:', appointmentData);
+
+      const docRef = await addDoc(collection(db, 'appointments'), appointmentData);
+      
+      console.log('Appointment created successfully with ID:', docRef.id);
+
+      // Reset form and close modal
+      setAppointmentClientId('');
+      setAppointmentDate('');
+      setAppointmentTime('09:00');
+      setAppointmentType('training');
+      setAppointmentDuration(60);
+      setAppointmentMedium('in_person');
+      setAppointmentAddress('');
+      setAppointmentVirtualPlatform('zoom');
+      setShowModal(false);
+      
+      alert('Appointment created successfully!');
+      
+    } catch (e: any) {
+      console.error('Error creating appointment:', e);
+      alert(`Failed to create appointment: ${e.message || 'Unknown error'}`);
+    } finally {
+      setAppointmentSaving(false);
+    }
+  };
+
+  // Initialize form with selected date when modal opens
+  useEffect(() => {
+    if (showModal && selectedDate) {
+      setAppointmentDate(format(selectedDate, 'yyyy-MM-dd'));
+    }
+  }, [showModal, selectedDate]);
+
   return (
     <div className="calendar-page">
       <div className="page-header">
@@ -397,7 +651,17 @@ const Calendar: React.FC = () => {
             <Button
               variant="secondary"
               size="small"
-              onClick={() => setMonthCursor((prev) => addMonths(prev, -1))}
+              onClick={() => {
+                if (view === 'day') {
+                  setSelectedDate((prev) => addDays(prev, -1));
+                  setMonthCursor((prev) => addDays(prev, -1));
+                } else if (view === 'week') {
+                  setSelectedDate((prev) => addWeeks(prev, -1));
+                  setMonthCursor((prev) => addWeeks(prev, -1));
+                } else {
+                  setMonthCursor((prev) => addMonths(prev, -1));
+                }
+              }}
             >
               Prev
             </Button>
@@ -415,7 +679,17 @@ const Calendar: React.FC = () => {
             <Button
               variant="secondary"
               size="small"
-              onClick={() => setMonthCursor((prev) => addMonths(prev, 1))}
+              onClick={() => {
+                if (view === 'day') {
+                  setSelectedDate((prev) => addDays(prev, 1));
+                  setMonthCursor((prev) => addDays(prev, 1));
+                } else if (view === 'week') {
+                  setSelectedDate((prev) => addWeeks(prev, 1));
+                  setMonthCursor((prev) => addWeeks(prev, 1));
+                } else {
+                  setMonthCursor((prev) => addMonths(prev, 1));
+                }
+              }}
             >
               Next
             </Button>
@@ -444,28 +718,20 @@ const Calendar: React.FC = () => {
         <Card
           title={monthTitle}
           subtitle={`Selected: ${selectedDateLabel}`}
-          actions={
-            <div className="calendar-legend">
-              <span className="calendar-legend-item">
-                <span className="calendar-legend-dot calendar-legend-dot-meeting" />
-                Meetings
-              </span>
-              <span className="calendar-legend-item">
-                <span className="calendar-legend-dot calendar-legend-dot-task" />
-                Tasks
-              </span>
-            </div>
-          }
           noPadding
         >
-          <div className="month-grid">
-            <div className="month-grid-header">Sun</div>
-            <div className="month-grid-header">Mon</div>
-            <div className="month-grid-header">Tue</div>
-            <div className="month-grid-header">Wed</div>
-            <div className="month-grid-header">Thu</div>
-            <div className="month-grid-header">Fri</div>
-            <div className="month-grid-header">Sat</div>
+          <div className={`month-grid ${view === 'week' ? 'week-grid' : view === 'day' ? 'day-grid' : ''}`}>
+            {view !== 'day' && (
+              <>
+                <div className="month-grid-header">Sun</div>
+                <div className="month-grid-header">Mon</div>
+                <div className="month-grid-header">Tue</div>
+                <div className="month-grid-header">Wed</div>
+                <div className="month-grid-header">Thu</div>
+                <div className="month-grid-header">Fri</div>
+                <div className="month-grid-header">Sat</div>
+              </>
+            )}
 
             {calendarDays.map((day) => {
               const inMonth = isSameMonth(day, monthCursor);
@@ -477,20 +743,42 @@ const Calendar: React.FC = () => {
               const dayAppointments = appointmentsListByDayKey.get(dayKey) ?? [];
               const dayTasks = tasksListByDayKey.get(dayKey) ?? [];
 
-              const MAX_CHIPS = 3;
-              const meetingChips: DayChip[] = dayAppointments.slice(0, MAX_CHIPS).map((apt) => ({
-                key: `apt-${apt.id}`,
-                kind: 'meeting',
-                label: formatAppointmentChip(apt),
-              }));
+              const MAX_CHIPS = view === 'day' ? 10 : view === 'week' ? 4 : 3;
+              const meetingChips: DayChip[] = dayAppointments.slice(0, MAX_CHIPS).map((apt) => {
+                const coachName = coachNameMap.get(apt.coachId) || 'Unknown';
+                const coachColor = coachColorMap.get(apt.coachId) || '#4f7cff';
+                const label = selectedCoachId 
+                  ? formatAppointmentChip(apt) 
+                  : `${coachName}: ${formatAppointmentChip(apt)}`;
+                
+                return {
+                  key: `apt-${apt.id}`,
+                  kind: 'meeting',
+                  label,
+                  coachId: apt.coachId,
+                  coachName,
+                  color: coachColor,
+                };
+              });
               const remainingSlots = MAX_CHIPS - meetingChips.length;
               const taskChips: DayChip[] =
                 remainingSlots > 0
-                  ? dayTasks.slice(0, remainingSlots).map((t) => ({
-                      key: `task-${t.id}`,
-                      kind: 'task',
-                      label: t.title,
-                    }))
+                  ? dayTasks.slice(0, remainingSlots).map((t) => {
+                      const coachName = coachNameMap.get(t.coachId) || 'Unknown';
+                      const coachColor = coachColorMap.get(t.coachId) || '#10b981';
+                      const label = selectedCoachId 
+                        ? t.title 
+                        : `${coachName}: ${t.title}`;
+                      
+                      return {
+                        key: `task-${t.id}`,
+                        kind: 'task',
+                        label,
+                        coachId: t.coachId,
+                        coachName,
+                        color: coachColor,
+                      };
+                    })
                   : [];
               const chips = meetingChips.concat(taskChips);
               const hiddenCount = Math.max(0, dayAppointments.length + dayTasks.length - chips.length);
@@ -509,13 +797,20 @@ const Calendar: React.FC = () => {
                     .join(' ')}
                   onClick={() => handleSelectDay(day)}
                 >
-                  <div className="month-grid-day-number">{format(day, 'd')}</div>
+                  <div className="month-grid-day-number">
+                    {view === 'day' || view === 'week' ? format(day, 'EEE d') : format(day, 'd')}
+                  </div>
                   <div className="month-grid-day-body">
                     <div className="day-chips">
                       {chips.map((chip) => (
                         <div
                           key={chip.key}
                           className={`day-chip ${chip.kind === 'meeting' ? 'day-chip-meeting' : 'day-chip-task'}`}
+                          style={chip.color ? {
+                            backgroundColor: `${chip.color}15`,
+                            borderColor: `${chip.color}40`,
+                            color: chip.color,
+                          } : undefined}
                           title={chip.label}
                         >
                           {chip.label}
@@ -557,6 +852,8 @@ const Calendar: React.FC = () => {
                   const endTime: any = (apt as any)?.endTime;
                   const start = startTime && typeof startTime.toDate === 'function' ? startTime.toDate() : null;
                   const end = endTime && typeof endTime.toDate === 'function' ? endTime.toDate() : null;
+                  const clientName = clientNameMap.get(apt.clientId) || apt.clientId || 'Unknown Client';
+                  const coachName = coachNameMap.get(apt.coachId) || apt.coachId || 'Unknown Coach';
 
                   return (
                     <div key={apt.id} className="appointment-card">
@@ -566,8 +863,17 @@ const Calendar: React.FC = () => {
                       </div>
                       <div className="appointment-details">
                         <h4>{apt.type ? String(apt.type).replace('_', ' ') : 'Meeting'}</h4>
-                        <p>Client: {apt.clientId}</p>
+                        <p>Client: {clientName}</p>
+                        {!selectedCoachId && <p>Coach: {coachName}</p>}
                         <p>Status: {apt.status}</p>
+                        {(apt as any).medium && (
+                          <p>
+                            Medium: {(apt as any).medium === 'in_person' ? 'In Person' : 'Virtual'}
+                            {(apt as any).medium === 'in_person' && (apt as any).address && ` - ${(apt as any).address}`}
+                            {(apt as any).medium === 'virtual' && (apt as any).virtualPlatform && 
+                              ` - ${(apt as any).virtualPlatform.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}`}
+                          </p>
+                        )}
                         <span className="appointment-type">{apt.type}</span>
                       </div>
                     </div>
@@ -643,33 +949,92 @@ const Calendar: React.FC = () => {
           <Select
             label="Client"
             options={[
-              { value: '1', label: 'John Smith' },
-              { value: '2', label: 'Emily Johnson' },
+              { value: '', label: clientsLoading ? 'Loading clients...' : 'Select a client' },
+              ...clients.map((c: any) => ({
+                value: c.id,
+                label: c.fullName || c.email || c.id,
+              })),
             ]}
+            value={appointmentClientId}
+            onChange={(e) => setAppointmentClientId(e.target.value)}
+            required
           />
-          <Select
-            label="Coach"
-            options={[
-              { value: '1', label: 'Sarah Williams' },
-              { value: '2', label: 'Mike Davis' },
-            ]}
+          <Input 
+            label="Date" 
+            type="date" 
+            value={appointmentDate}
+            onChange={(e) => setAppointmentDate(e.target.value)}
+            required
           />
-          <Input label="Date" type="date" />
-          <Input label="Time" type="time" />
+          <Input 
+            label="Start Time" 
+            type="time" 
+            value={appointmentTime}
+            onChange={(e) => setAppointmentTime(e.target.value)}
+            required
+          />
+          <Input 
+            label="Duration (minutes)" 
+            type="number" 
+            value={String(appointmentDuration)}
+            onChange={(e) => setAppointmentDuration(Number(e.target.value))}
+            required
+          />
           <Select
             label="Type"
             options={[
               { value: 'training', label: 'Training' },
               { value: 'consultation', label: 'Consultation' },
               { value: 'assessment', label: 'Assessment' },
+              { value: 'follow_up', label: 'Follow-up' },
             ]}
+            value={appointmentType}
+            onChange={(e) => setAppointmentType(e.target.value as any)}
+            required
           />
+          <Select
+            label="Medium"
+            options={[
+              { value: 'in_person', label: 'In Person' },
+              { value: 'virtual', label: 'Virtual' },
+            ]}
+            value={appointmentMedium}
+            onChange={(e) => setAppointmentMedium(e.target.value as 'in_person' | 'virtual')}
+            required
+          />
+          {appointmentMedium === 'in_person' ? (
+            <Input
+              label="Address"
+              type="text"
+              value={appointmentAddress}
+              onChange={(e) => setAppointmentAddress(e.target.value)}
+              placeholder="Enter meeting address"
+              required
+            />
+          ) : (
+            <Select
+              label="Virtual Platform"
+              options={[
+                { value: 'zoom', label: 'Zoom' },
+                { value: 'google_meet', label: 'Google Meet' },
+                { value: 'teams', label: 'Microsoft Teams' },
+              ]}
+              value={appointmentVirtualPlatform}
+              onChange={(e) => setAppointmentVirtualPlatform(e.target.value as 'zoom' | 'google_meet' | 'teams')}
+              required
+            />
+          )}
           <div className="modal-actions">
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
+            <Button variant="secondary" onClick={() => setShowModal(false)} disabled={appointmentSaving}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={() => { alert(UI_MESSAGES.APPOINTMENT.SUCCESS); setShowModal(false); }}>
-              Create
+            <Button 
+              variant="primary" 
+              onClick={createAppointment}
+              loading={appointmentSaving}
+              disabled={!selectedCoachId || !appointmentClientId || !appointmentDate || !appointmentTime}
+            >
+              Create Appointment
             </Button>
           </div>
         </div>

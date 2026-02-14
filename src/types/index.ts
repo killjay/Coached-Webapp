@@ -426,6 +426,9 @@ export interface Appointment {
   startTime: Timestamp;
   endTime: Timestamp;
   type: 'training' | 'consultation' | 'assessment' | 'follow_up';
+  medium?: 'in_person' | 'virtual';
+  address?: string;
+  virtualPlatform?: 'zoom' | 'google_meet' | 'teams';
   status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
   notes?: string;
   location?: string;

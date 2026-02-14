@@ -1,9 +1,3 @@
-# Compiled JavaScript files
 lib/
 node_modules/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Local config
-.runtimeconfig.json
+*.log

@@ -126,44 +126,39 @@ const CreateTemplate: React.FC = () => {
           <div className="templates-grid">
             {templates.map((template) => (
               <Card key={template.id} className="template-card">
+                {/* Header with title and actions together */}
                 <div className="template-card-header">
-                  <h3 className="template-card-title">{template.name}</h3>
-                  <span className={`status-badge status-${template.status}`}>
-                    {template.status}
-                  </span>
-                </div>
-                {template.tags && template.tags.length > 0 && (
-                  <div className="template-tags">
-                    {template.tags.map((tag, idx) => (
-                      <span key={idx} className="template-tag">{tag}</span>
-                    ))}
+                  <div>
+                    <h3 className="template-card-title">
+                      {template.name}
+                      <span className="template-card-meta">
+                        <span>{template.duration} weeks</span>
+                        <span>{template.difficulty}</span>
+                      </span>
+                    </h3>
+                    <p className="template-card-description">{template.description}</p>
                   </div>
-                )}
-                <p className="template-card-description">{template.description}</p>
-                <div className="template-card-meta">
-                  <span>Duration: {template.duration} weeks</span>
-                  <span>Difficulty: {template.difficulty}</span>
+                  <div className="template-card-actions">
+                    <Button variant="secondary" size="small" onClick={() => handleEdit(template.id)}>
+                      Edit
+                    </Button>
+                    <Button variant="danger" size="small" onClick={() => handleDelete(template.id)}>
+                      Delete
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Secondary info */}
                 <div className="template-card-date">
                   {template.updatedAt && (
                     <span>
                       {viewMode === 'published' ? 'Published' : 'Saved'}: {new Date(template.updatedAt.seconds * 1000).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit'
+                        year: 'numeric'
                       })}
                     </span>
                   )}
-                </div>
-                <div className="template-card-actions">
-                  <Button variant="secondary" size="small" onClick={() => handleEdit(template.id)}>
-                    Edit
-                  </Button>
-                  <Button variant="danger" size="small" onClick={() => handleDelete(template.id)}>
-                    Delete
-                  </Button>
                 </div>
               </Card>
             ))}

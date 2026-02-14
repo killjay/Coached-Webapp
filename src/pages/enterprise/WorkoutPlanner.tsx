@@ -242,11 +242,13 @@ const WorkoutPlanner: React.FC = () => {
     setCurrentStep(2);
   };
 
-  const validateTemplate = () => {
+  const validateTemplate = (skipExerciseCheck: boolean = false) => {
     if (!coachId) return 'You must be logged in.';
     if (!name.trim()) return 'Template name is required.';
-    const totalExercises = Object.values(schedule).reduce((sum, list) => sum + (list?.length || 0), 0);
-    if (totalExercises === 0) return 'Add at least one exercise to the schedule.';
+    if (!skipExerciseCheck) {
+      const totalExercises = Object.values(schedule).reduce((sum, list) => sum + (list?.length || 0), 0);
+      if (totalExercises === 0) return 'Add at least one exercise to the schedule.';
+    }
     return null;
   };
 
@@ -342,11 +344,11 @@ const WorkoutPlanner: React.FC = () => {
     setAssignSuccess(null);
   };
 
-  const handleSave = async (nextStatus: TemplateStatus) => {
+  const handleSave = async (nextStatus: TemplateStatus, skipExerciseCheck: boolean = false) => {
     setSaveError(null);
     setAssignSuccess(null);
 
-    const validationError = validateTemplate();
+    const validationError = validateTemplate(skipExerciseCheck);
     if (validationError) {
       setSaveError(validationError);
       return;
@@ -549,7 +551,7 @@ const WorkoutPlanner: React.FC = () => {
               </div>
 
               <div className="template-actions">
-                <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving}>
+                <Button variant="secondary" onClick={() => handleSave('draft', true)} disabled={saving}>
                   Save Draft
                 </Button>
                 <Button variant="primary" onClick={handleNextStep}>
