@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Home from './components/Home';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import PlanSelection from './components/PlanSelection';
@@ -98,6 +99,14 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route
         path="/"
+        element={
+          <PublicRoute>
+            <Home />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/login"
         element={
           <PublicRoute>
             <Login />

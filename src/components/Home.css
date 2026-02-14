@@ -1,0 +1,201 @@
+/* Home page uses the same base styles as login */
+.home-cta-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.home-cta-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  font-family: inherit;
+}
+
+/* Primary CTA - Coach */
+.home-cta-coach {
+  background: #161616;
+  border: 2px solid #161616;
+  color: white;
+}
+
+.home-cta-coach:hover {
+  background: #2a2a2a;
+  border-color: #2a2a2a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(22, 22, 22, 0.3);
+}
+
+.home-cta-coach .cta-icon-wrapper {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.home-cta-coach .cta-label {
+  color: white;
+}
+
+.home-cta-coach .cta-sublabel {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Secondary CTA - Client */
+.home-cta-client {
+  background: white;
+  border: 2px solid #d1d5db;
+}
+
+.home-cta-client:hover {
+  border-color: #161616;
+  background: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.home-cta-client .cta-icon-wrapper {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.home-cta-client .cta-label {
+  color: #1a1d2e;
+}
+
+.home-cta-client .cta-sublabel {
+  color: #6b7280;
+}
+
+.home-cta-button:hover .cta-icon-wrapper {
+  transform: scale(1.1);
+}
+
+.cta-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.cta-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.cta-label {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cta-sublabel {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.home-features {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px 0 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.feature-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.feature-icon img {
+  width: 32px;
+  height: 32px;
+}
+
+.feature-item span {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: normal;
+}
+
+.feature-divider {
+  width: 1px;
+  height: 40px;
+  background: #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .home-cta-button {
+    padding: 18px 20px;
+    gap: 14px;
+  }
+
+  .cta-icon-wrapper {
+    width: 44px;
+    height: 44px;
+  }
+
+  .cta-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .cta-label {
+    font-size: 16px;
+  }
+
+  .cta-sublabel {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-features {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .feature-divider {
+    width: 40px;
+    height: 1px;
+  }
+
+  .home-cta-button {
+    padding: 16px 18px;
+  }
+
+  .cta-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .cta-icon {
+    width: 24px;
+    height: 24px;
+  }
+}

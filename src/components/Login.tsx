@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
@@ -10,6 +10,9 @@ interface LoginFormData {
 }
 
 const Login: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const userType = searchParams.get('type'); // 'coach' or 'client'
+  
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -134,6 +137,14 @@ const Login: React.FC = () => {
         </div>
         
         <div className="login-form-section">
+        {userType && (
+          <button className="back-button" onClick={() => navigate('/')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back
+          </button>
+        )}
         <div className="login-header">
           <div className="logo">
             <div className="logo-icon">
@@ -163,14 +174,11 @@ const Login: React.FC = () => {
             </div>
             <h1 className="logo-text">Coached</h1>
           </div>
-          <h2 className="login-title">
-            {isSignupMode ? 'Create Account' : 'Welcome Back'}
-          </h2>
-          <p className="login-subtitle">
-            {isSignupMode
-              ? 'Join us to start your fitness journey'
-              : 'Sign in to continue to your account'}
-          </p>
+          {userType && (
+            <h2 className="login-title">
+              {isSignupMode ? 'Sign up' : 'Log in'} as {userType === 'coach' ? 'Coach' : 'Client'}
+            </h2>
+          )}
         </div>
 
         {error && <div className="error-message">{error}</div>}
