@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import PlanSelection from './components/PlanSelection';
 import EnterpriseLayout from './layouts/EnterpriseLayout';
+import ClientLayout from './layouts/ClientLayout';
 import RevenueDashboard from './pages/enterprise/RevenueDashboard';
 import ClientOnboard from './pages/enterprise/ClientOnboard';
 import CoachOnboard from './pages/enterprise/CoachOnboard';
@@ -18,23 +19,32 @@ import PendingClients from './pages/enterprise/PendingClients';
 import ClientDashboard from './pages/enterprise/ClientDashboard';
 import WorkoutPlanner from './pages/enterprise/WorkoutPlanner';
 import DietPlanner from './pages/enterprise/DietPlanner';
+import ClientPage from './pages/client/ClientPage';
+import ClientCalendar from './pages/client/ClientCalendar';
+import ClientCoach from './pages/client/ClientCoach';
+import ClientWorkoutLogs from './pages/client/ClientWorkoutLogs';
 import './App.css';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, selectedPlan } = useAuth();
+  const { user, selectedPlan, userRole } = useAuth();
 
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  // If user is authenticated but hasn't selected a plan, redirect to plan selection
+  // If user is a client, redirect to client page (clients don't need a plan)
+  if (userRole === 'client') {
+    return <Navigate to="/client" replace />;
+  }
+
+  // For coaches: if authenticated but hasn't selected a plan, redirect to plan selection
   if (!selectedPlan) {
     return <Navigate to="/select-plan" replace />;
   }
 
-  // If user has enterprise plan, redirect to enterprise dashboard
-  if (selectedPlan === 'enterprise') {
+  // If user has enterprise plan and is a coach, redirect to enterprise dashboard
+  if (selectedPlan === 'enterprise' && userRole === 'coach') {
     return <Navigate to="/enterprise/revenue" replace />;
   }
 
@@ -43,7 +53,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Enterprise Route Component (requires auth and enterprise plan)
 const EnterpriseRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, selectedPlan } = useAuth();
+  const { user, selectedPlan, userRole } = useAuth();
 
   if (!user) {
     return <Navigate to="/" replace />;
@@ -51,6 +61,11 @@ const EnterpriseRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   if (!selectedPlan) {
     return <Navigate to="/select-plan" replace />;
+  }
+
+  // Clients can't access enterprise routes
+  if (userRole === 'client') {
+    return <Navigate to="/client" replace />;
   }
 
   // Only enterprise users can access
@@ -63,10 +78,15 @@ const EnterpriseRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 // Plan Selection Route (requires auth, but no plan)
 const PlanRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, selectedPlan } = useAuth();
+  const { user, selectedPlan, userRole } = useAuth();
 
   if (!user) {
     return <Navigate to="/" replace />;
+  }
+
+  // Clients don't select plans - redirect them to client page
+  if (userRole === 'client') {
+    return <Navigate to="/client" replace />;
   }
 
   // If user already has a plan, redirect to appropriate dashboard
@@ -82,13 +102,40 @@ const PlanRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // Public Route Component (redirect to dashboard if already logged in)
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, selectedPlan } = useAuth();
+  const { user, selectedPlan, userRole } = useAuth();
 
   if (user && selectedPlan) {
+    if (userRole === 'client') {
+      return <Navigate to="/client" replace />;
+    }
     if (selectedPlan === 'enterprise') {
       return <Navigate to="/enterprise/revenue" replace />;
     }
     return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Client Route Component (requires auth and client role)
+const ClientRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, userRole, selectedPlan } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Only clients can access this route
+  if (userRole !== 'client') {
+    // If they're a coach with a plan, redirect appropriately
+    if (selectedPlan === 'enterprise') {
+      return <Navigate to="/enterprise/revenue" replace />;
+    }
+    if (selectedPlan) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    // Coach without plan goes to plan selection
+    return <Navigate to="/select-plan" replace />;
   }
 
   return <>{children}</>;
@@ -129,6 +176,20 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      {/* Client Routes */}
+      <Route
+        path="/client"
+        element={
+          <ClientRoute>
+            <ClientLayout />
+          </ClientRoute>
+        }
+      >
+        <Route index element={<ClientPage />} />
+        <Route path="workout-logs" element={<ClientWorkoutLogs />} />
+        <Route path="calendar" element={<ClientCalendar />} />
+        <Route path="coach" element={<ClientCoach />} />
+      </Route>
       {/* Enterprise Routes */}
       <Route
         path="/enterprise"

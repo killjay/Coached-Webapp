@@ -15,12 +15,14 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   selectedPlan: string | null;
+  userRole: 'coach' | 'client' | null;
   signup: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   savePlan: (planType: string) => Promise<void>;
   checkUserPlan: () => Promise<string | null>;
+  saveUserRole: (role: 'coach' | 'client') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<'coach' | 'client' | null>(null);
 
   useEffect(() => {
     // #region agent log
@@ -50,22 +53,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(user);
       let plan: string | null = null;
+      let role: 'coach' | 'client' | null = null;
       
       if (user) {
         // #region agent log
         fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:47',message:'Calling checkUserPlan',data:{userId:user.uid},timestamp:Date.now(),hypothesisId:'H1,H2'})}).catch(()=>{});
         // #endregion
         
-        // Load user's plan when they login
-        plan = await checkUserPlan();
+        // Load user's plan and role when they login
+        const userData = await checkUserData();
+        plan = userData.plan;
+        role = userData.role;
         
         // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:48',message:'checkUserPlan completed',data:{plan:plan},timestamp:Date.now(),hypothesisId:'H1,H2'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:48',message:'checkUserPlan completed',data:{plan:plan,role:role},timestamp:Date.now(),hypothesisId:'H1,H2'})}).catch(()=>{});
         // #endregion
         
         setSelectedPlan(plan);
+        setUserRole(role);
       } else {
         setSelectedPlan(null);
+        setUserRole(null);
       }
       
       // #region agent log
@@ -167,13 +175,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const checkUserPlan = async (): Promise<string | null> => {
+  const checkUserData = async (): Promise<{ plan: string | null; role: 'coach' | 'client' | null }> => {
     // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:100',message:'checkUserPlan called',data:{hasCurrentUser:!!auth.currentUser},timestamp:Date.now(),hypothesisId:'H1,H2,H5'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:100',message:'checkUserData called',data:{hasCurrentUser:!!auth.currentUser},timestamp:Date.now(),hypothesisId:'H1,H2,H5'})}).catch(()=>{});
     // #endregion
     
     if (!auth.currentUser) {
-      return null;
+      return { plan: null, role: null };
     }
 
     try {
@@ -208,22 +216,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userDoc && userDoc.exists()) {
         const data = userDoc.data();
         // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:119',message:'User doc exists - returning plan',data:{plan:data.plan},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:119',message:'User doc exists - returning data',data:{plan:data.plan,role:data.role},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
         // #endregion
-        return data.plan || null;
+        return {
+          plan: data.plan || null,
+          role: data.role || null,
+        };
       }
 
       // #region agent log
       fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:122',message:'No user doc found - returning null',data:{},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
       // #endregion
 
-      return null;
+      return { plan: null, role: null };
     } catch (error) {
       // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:124',message:'checkUserPlan error caught',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:124',message:'checkUserData error caught',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
       // #endregion
-      console.error('Error checking user plan:', error);
-      return null;
+      console.error('Error checking user data:', error);
+      return { plan: null, role: null };
+    }
+  };
+
+  const checkUserPlan = async (): Promise<string | null> => {
+    const userData = await checkUserData();
+    return userData.plan;
+  };
+
+  const saveUserRole = async (role: 'coach' | 'client') => {
+    // Use auth.currentUser instead of user state to avoid timing issues
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      throw new Error('User must be authenticated to save role');
+    }
+
+    try {
+      const timeoutPromise = new Promise<boolean>((_, reject) => {
+        setTimeout(() => reject(new Error('Firestore write timeout after 5 seconds')), 5000);
+      });
+
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      
+      const writePromise = setDoc(userDocRef, {
+        email: currentUser.email,
+        role: role,
+        roleSelectedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      await Promise.race([writePromise, timeoutPromise]);
+      setUserRole(role);
+    } catch (error) {
+      console.error('Error saving user role:', error);
+      // Still set the role locally even if Firestore write fails
+      setUserRole(role);
+      console.warn('Role saved locally but not persisted to Firestore');
     }
   };
 
@@ -231,12 +278,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     selectedPlan,
+    userRole,
     signup,
     login,
     logout,
     signInWithGoogle,
     savePlan,
     checkUserPlan,
+    saveUserRole,
   };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;

@@ -23,7 +23,7 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const { login, signup, signInWithGoogle } = useAuth();
+  const { login, signup, signInWithGoogle, saveUserRole } = useAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,22 +58,44 @@ const Login: React.FC = () => {
           return;
         }
         await signup(formData.email, formData.password);
+        
+        // Save user role if provided
+        if (userType === 'coach' || userType === 'client') {
+          await saveUserRole(userType);
+        }
+        
         // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Login.tsx:54',message:'Signup successful - navigating to plan selection',data:{},timestamp:Date.now(),hypothesisId:'H6',runId:'fix2'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Login.tsx:54',message:'Signup successful - navigating',data:{userType},timestamp:Date.now(),hypothesisId:'H6',runId:'fix2'})}).catch(()=>{});
         // #endregion
-        // Redirect to plan selection for new users
-        navigate('/select-plan');
+        
+        // Clients go directly to client page, coaches go to plan selection
+        if (userType === 'client') {
+          navigate('/client');
+        } else {
+          navigate('/select-plan');
+        }
       } else {
         // Login mode
         // #region agent log
         fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Login.tsx:58',message:'Calling login',data:{email:formData.email},timestamp:Date.now(),hypothesisId:'H6',runId:'fix2'})}).catch(()=>{});
         // #endregion
         await login(formData.email, formData.password);
+        
+        // Save user role if provided (for existing users logging in with type parameter)
+        if (userType === 'coach' || userType === 'client') {
+          await saveUserRole(userType);
+        }
+        
         // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Login.tsx:60',message:'Login successful - navigating to dashboard',data:{},timestamp:Date.now(),hypothesisId:'H6',runId:'fix2'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7244/ingest/2595f84f-cbd5-495e-a29e-39870c95961e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Login.tsx:60',message:'Login successful - navigating',data:{userType},timestamp:Date.now(),hypothesisId:'H6',runId:'fix2'})}).catch(()=>{});
         // #endregion
-        // Redirect to dashboard for existing users (route protection will handle plan check)
-        navigate('/dashboard');
+        
+        // Clients go directly to client page, others go to dashboard (route protection will handle the rest)
+        if (userType === 'client') {
+          navigate('/client');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (err: any) {
       // #region agent log
@@ -104,9 +126,19 @@ const Login: React.FC = () => {
 
     try {
       await signInWithGoogle();
-      // After Google sign-in, redirect to dashboard
-      // The route protection will check if user has a plan and redirect accordingly
-      navigate('/dashboard');
+      
+      // Save user role if provided
+      if (userType === 'coach' || userType === 'client') {
+        await saveUserRole(userType);
+      }
+      
+      // Clients go directly to client page, others go to dashboard
+      if (userType === 'client') {
+        navigate('/client');
+      } else {
+        // The route protection will check if user has a plan and redirect accordingly
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign in with Google');
       setIsLoading(false);
